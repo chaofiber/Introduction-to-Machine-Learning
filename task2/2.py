@@ -92,7 +92,7 @@ def svc(X,y):
 def cross_validation(data, Y_train, kfold):
 	score = 0
 	score_train = 0
-	kfold = 30
+	kfold = 2
 	kf = KFold(n_splits = kfold)
 	alpha = 10
 	weight = 0
@@ -102,7 +102,7 @@ def cross_validation(data, Y_train, kfold):
 		y_train, y_val = Y_train[train_index], Y_train[val_index]
 		reg = svc(x_train, y_train)
 		y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
-		score += roc_auc_score(y_val_pred[:,1],y_val) * len(y_val)
+		score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
 		#score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
 		#weight += reg.coef_
 	#print("{}-fold cross validation RMSE: {} with {} features".format(kfold, math.sqrt(score / len(Y_train)), n))
@@ -126,9 +126,7 @@ def do_task1(train, label_data, test):
 	for label in TESTS:
 		print(label)
 		x_data = train.sort_values('pid').values;
-		print(x_data.shape)
 		x_label = label_data.sort_values('pid')[label].values;
-		print(x_label.shape)
 		score = cross_validation(x_data, x_label, 20);
 		print("score of {}:{}".format(label, score));
 	return
