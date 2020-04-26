@@ -9,6 +9,7 @@ from xgboost import XGBRegressor
 from sklearn.feature_selection import SelectKBest, f_classif, chi2, f_regression,SelectFromModel
 from sklearn.svm import SVR, SVC
 from scipy import stats
+from statistics import mean 
 
 VITALS = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
 TESTS = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST', 'LABEL_Alkalinephos', 'LABEL_Bilirubin_total',
@@ -66,9 +67,9 @@ def feature_selection(data,y,num_feature):
 	#select = SelectFromModel(estimator=Lasso(), threshold=-np.inf, max_features=num_feature).fit(data,y)
 	new_data = select.transform(data);
 	idx = select.get_support()
-	print(idx)
+	#print(idx)
 	#new_data = np.delete(new_data,idx,1)
-	return new_data, idx
+	return new_data
 	
 def feature_selection_by_corre(data,y):
 	for i in range(21):
@@ -123,12 +124,19 @@ def print_to_csv(weight,idx):
 	result.to_csv('./weight.csv',indata_processdex=False,header=False)
 	
 def do_task1(train, label_data, test):
+	total_score = [];
+	print("using 10 % of data");
 	for label in TESTS:
 		print(label)
-		x_data = train.sort_values('pid').values;
-		x_label = label_data.sort_values('pid')[label].values;
+		x_data = train.sort_values('pid')[1:4000].values;
+		x_label = label_data.sort_values('pid')[1:4000][label].values;
+		
+		# do feature selection before training
+		x_data = feature_selection(x_data,x_label,70);
 		score = cross_validation(x_data, x_label, 20);
+		total_score.append(score);
 		print("score of {}:{}".format(label, score));
+	print("average score of subtask1:{}".format(mean(total_score)));
 	return
 		
 
@@ -137,9 +145,10 @@ def main():
 	test_path = './test_features.csv';
 	label_path = './train_labels.csv';
 	train, test, label = data_process(train_path, test_path, label_path); # still return pandaFrame
+
 	do_task1(train, label, test)
 	# if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
-	# task 1do_task1()
+	
     # task 2
     # task 3
     
