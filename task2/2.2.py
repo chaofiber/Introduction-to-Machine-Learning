@@ -208,8 +208,8 @@ def main():
 	train_path = './train_features.csv';
 	test_path = './test_features.csv';
 	label_path = './train_labels.csv';
-	#train, test, label = data_process(train_path, test_path, label_path); # still return pandaFrame
-	#do_task1(train, label, test)
+	train, test, label = data_process(train_path, test_path, label_path); # still return pandaFrame
+	do_task1(train, label, test)
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
 	# task 1do_task1()
     # task 2	
