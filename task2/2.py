@@ -115,8 +115,6 @@ def cross_validation(data, Y_train, kfold):
 		score += roc_auc_score(y_val, y_val_pred) * len(y_val)
 		#score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
 		#weight += reg.coef_
-	#print("{}-fold cross validation RMSE: {} with {} features".format(kfold, math.sqrt(score / len(Y_train)), n))
-	#print("{}-fold training RMSE: {} ".format(kfold, math.sqrt(score_train/ (len(Y_train)*kfold))))
 	return (score / len(Y_train))
 
 def print_to_csv(weight,idx):
@@ -137,8 +135,8 @@ def do_task1(train, label_data, test):
 	print("using 10 % of data");
 	for label in TESTS:
 		print(label)
-		x_data = train.sort_values('pid')[1:12000].values;
-		x_label = label_data.sort_values('pid')[1:12000][label].values;
+		x_data = train.sort_values('pid').values;
+		x_label = label_data.sort_values('pid')[label].values;
 		
 		# do feature selection before training
 		x_data = feature_selection(x_data,x_label,70);
