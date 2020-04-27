@@ -91,8 +91,8 @@ def svc(X,y):
 	return clf;
 
 def xgb(X,y):
-	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.1,
-	max_depth = 5, alpha = 10, n_estimators = 10);
+	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.3,
+	max_depth = 5, alpha = 10, n_estimators = 100);
 	xg_reg.fit(X,y);
 	return xg_reg;
                 
