@@ -90,10 +90,16 @@ def svc(X,y):
 	clf.fit(X,y);
 	return clf;
 
+def xgb(X,y):
+	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.1,
+	max_depth = 5, alpha = 10, n_estimators = 10);
+	xg_reg.fit(X,y);
+	return xg_reg;
+                
 def cross_validation(data, Y_train, kfold):
 	score = 0
 	score_train = 0
-	kfold = 2
+	kfold = 5
 	kf = KFold(n_splits = kfold)
 	alpha = 10
 	weight = 0
@@ -101,9 +107,12 @@ def cross_validation(data, Y_train, kfold):
 	for train_index, val_index in kf.split(data):
 		x_train, x_val= data[train_index], data[val_index]
 		y_train, y_val = Y_train[train_index], Y_train[val_index]
-		reg = svc(x_train, y_train)
-		y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
-		score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
+		#reg = svc(x_train, y_train)
+		reg = xgb(x_train,y_train)
+		#y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
+		y_val_pred = reg.predict(x_val)
+		#score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
+		score += roc_auc_score(y_val, y_val_pred) * len(y_val)
 		#score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
 		#weight += reg.coef_
 	#print("{}-fold cross validation RMSE: {} with {} features".format(kfold, math.sqrt(score / len(Y_train)), n))
@@ -128,8 +137,8 @@ def do_task1(train, label_data, test):
 	print("using 10 % of data");
 	for label in TESTS:
 		print(label)
-		x_data = train.sort_values('pid')[1:4000].values;
-		x_label = label_data.sort_values('pid')[1:4000][label].values;
+		x_data = train.sort_values('pid')[1:12000].values;
+		x_label = label_data.sort_values('pid')[1:12000][label].values;
 		
 		# do feature selection before training
 		x_data = feature_selection(x_data,x_label,70);
