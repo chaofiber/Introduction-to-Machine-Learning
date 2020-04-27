@@ -237,13 +237,17 @@ def main():
 	
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
 	# task 1
+	print("starting subtask1");
 	do_task1(train, label, test)
+	print("finish subtask1");
     # task 2	
 	train, test, label = data_processnorm(train_path, test_path, label_path); # still return pandaFrame
 	#new_train = feature_selectionKbest(train,label,num_feature)
 	new_train = feature_Univarselection(train,label,Alpha)
 	#new_train = feature_selectionfrommodel(train,label,num_feature)
-	#do_task2(new_train, label, test)
+	print("starting subtask2");
+	do_task2(new_train, label, test)
+	print("finish subtask2");
     # task 3
     
 	#kfold = 20
