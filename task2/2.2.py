@@ -8,11 +8,14 @@ from sklearn import preprocessing
 import math
 import csv
 from xgboost import XGBRegressor
-from sklearn.feature_selection import SelectKBest, SelectFpr, SelectFdr, SelectFwe, f_classif, chi2, f_regression, \
-    SelectFromModel
+
+
+from sklearn.feature_selection import SelectKBest, SelectFpr, SelectFdr, SelectFwe, f_classif, chi2, f_regression,SelectFromModel
 from sklearn.svm import SVR, SVC, LinearSVC
 from scipy import stats
-from statistics import mean
+from statistics import mean 
+
+
 
 VITALS = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
 TESTS = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST', 'LABEL_Alkalinephos', 'LABEL_Bilirubin_total',
@@ -167,47 +170,43 @@ def feature_selectionfrommodel(data, y, num_feature):
     return new_data
 
 
-def feature_selection(data, y, num_feature):
-    select = SelectKBest(f_regression, k=num_feature).fit(data, y)
-    # select = SelectFromModel(estimator=Lasso(), threshold=-np.inf, max_features=num_feature).fit(data,y)
-    new_data = select.transform(data);
-    idx = select.get_support()
-    # print(idx)
-    # new_data = np.delete(new_data,idx,1)
-    return new_data
+def feature_selection(data,y,num_feature):
+	select = SelectKBest(f_regression, k=num_feature).fit(data,y)
+	#select = SelectFromModel(estimator=Lasso(), threshold=-np.inf, max_features=num_feature).fit(data,y)
+	new_data = select.transform(data);
+	idx = select.get_support()
+	#print(idx)
+	#new_data = np.delete(new_data,idx,1)
+	return new_data
+	
+def feature_selection_by_corre(data,y):
+	for i in range(21):
+		print(stats.pearsonr(data[:,i],y))
+	return data
+	
+def ridgecv(X,y):
+	reg = RidgeCV(alphas=[1e-1,1,10,100], fit_intercept=False, cv=30).fit(X,y)
+	return reg
+
+def ridge(X,y,alpha):
+	reg = Ridge(alpha=alpha,fit_intercept='False',tol=1e-6,solver='svd');
+	reg.fit(X,y)
+	return reg
+
+def svc(X,y):
+	clf = SVC(probability=True, class_weight='balanced');
+	clf.fit(X,y);
+	return clf;
 
 
-def feature_selection_by_corre(data, y):
-    for i in range(21):
-        print(stats.pearsonr(data[:, i], y))
-    return data
-
-
-def ridgecv(X, y):
-    reg = RidgeCV(alphas=[1e-1, 1, 10, 100], fit_intercept=False, cv=30).fit(X, y)
-    return reg
-
-
-def ridge(X, y, alpha):
-    reg = Ridge(alpha=alpha, fit_intercept='False', tol=1e-6, solver='svd');
-    reg.fit(X, y)
-    return reg
-
-
-def svc(X, y):
-    clf = SVC(probability=True, class_weight='balanced');
-    clf.fit(X, y);
-    return clf;
-
-
-def xgb(X, y):
-    xg_reg = XGBRegressor(objective='binary:logistic', colsample_bytree=0.3, learning_rate=0.3,
-                          max_depth=5, alpha=10, n_estimators=100);
-    xg_reg.fit(X, y);
-    return xg_reg;
-
+def xgb(X,y):
+	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.3,
+	max_depth = 5, alpha = 10, n_estimators = 100);
+	xg_reg.fit(X,y);
+	return xg_reg;
 
 def cross_validation(data, Y_train, kfold):
+
     score = 0
     score_train = 0
     kfold = 5
@@ -277,6 +276,7 @@ def do_task1(train, label_data, test):
     return
 
 
+
 def do_task2(train, label_data, test):
     print(sep)
     x_data = train.sort_values('pid').values;
@@ -300,6 +300,7 @@ def do_task3(train, label_data, test):
 
     return
 def main():
+
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
@@ -328,6 +329,7 @@ def main():
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
     # do_task1()
+
 
     # task 3
     # new_train = feature_Univarselection(train, label, Alpha)
