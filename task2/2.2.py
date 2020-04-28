@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge, Lasso, RidgeCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, KFold
-from sklearn.metrics import mean_squared_error, roc_auc_score
+from sklearn.metrics import mean_squared_error, roc_auc_score, r2_score
 from sklearn import preprocessing
 import math
 import csv
@@ -68,6 +68,20 @@ def data_processnorm(train_path, test_path, label_path):
 
     return train, test, label
 
+def data_process_mean(train_path,test_path,label_path):
+    train = load_data(train_path)
+    test = load_data(test_path)
+    label = load_data(label_path)
+    train = feature_augment(train);
+    print('training data size after feature augmentation:');
+    print(train.shape)
+    test = feature_augment(test);
+    print('testing data size after feature augmentation:');
+    print(test.shape)
+
+    train = train.interpolate('pad')
+    test = test.interpolate('pad')
+    return train,test,label
 
 def load_data(data_path):
     data = pd.read_csv(data_path)
@@ -75,7 +89,11 @@ def load_data(data_path):
     # y_train = train.y
     # X_test = test.drop(['Id'],axis=1)
     return data
-
+def regression(X,y):
+    xg_reg = XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.3, learning_rate = 0.05,
+	max_depth = 5, alpha = 10, n_estimators = 160)
+    xg_reg.fit(X,y)
+    return xg_reg
 
 def feature_augment(data):
     mean_data = data.groupby('pid').mean();
@@ -210,7 +228,24 @@ def cross_validation(data, Y_train, kfold):
     # weight += reg.coef_
     return (score / len(Y_train))
 
+def cross_validation_reg(data, Y_train, kfold):
+    score = 0
+    score_train = 0
+    # kfold = 2
+    kf = KFold(n_splits = kfold)
+    weight = 0
+    m,n = data.shape
 
+    for train_index, val_index in kf.split(data):
+        x_train, x_val= data[train_index], data[val_index]
+        y_train, y_val = Y_train[train_index], Y_train[val_index]
+        # print(len(y_val), len(Y_train))
+        reg = regression(x_train, y_train)
+        y_val_pred = reg.predict(x_val) # shape: (n_sample, n_class)
+
+        score += (0.5 + 0.5 * np.maximum(0, r2_score(y_val, y_val_pred)))*len(y_val)
+
+    return (score / len(Y_train))
 def print_to_csv(weight, idx):
     j = 0;
     weight_ = np.zeros(21);
@@ -250,29 +285,54 @@ def do_task2(train, label_data, test):
     print("score of {}:{}".format(sep, score));
     return
 
+def do_task3(train, label_data, test):
+    mean_score = 0
+    for label in VITALS:
+        print(label)
+        # --- Do regression tasks
+        x_data = train.sort_values('pid').values
+        x_label = label_data.sort_values('pid')[label].values
 
+        score = cross_validation_reg(x_data, x_label, 5)
+        print("score of {}:{}".format(label, score))
+        mean_score += score
+    print("mean score: {}".format(mean_score/len(VITALS)))
+
+    return
 def main():
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
-    train, test, label = data_process(train_path, test_path, label_path);  # still return pandaFrame
+    # train, test, label = data_process(train_path, test_path, label_path);  # still return pandaFrame
 
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
-    print("starting subtask1");
-    do_task1(train, label, test)
-    print("finish subtask1");
-    # task 2
-    train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
-    # new_train = feature_selectionKbest(train,label,num_feature)
-    new_train = feature_Univarselection(train, label, Alpha)
-    # new_train = feature_selectionfrommodel(train,label,num_feature)
-    print("starting subtask2");
-    do_task2(new_train, label, test)
-    print("finish subtask2");
+    # print("starting subtask1");
+    # do_task1(train, label, test)
+    # print("finish subtask1");
+    # # task 2
+    # train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
+    # # new_train = feature_selectionKbest(train,label,num_feature)
+    # new_train = feature_Univarselection(train, label, Alpha)
+    # # new_train = feature_selectionfrommodel(train,label,num_feature)
+    # print("starting subtask2");
+    # do_task2(new_train, label, test)
+    # print("finish subtask2");
+
+
 
 
 # task 3
+    train, test, label = data_process_mean(train_path, test_path, label_path)
+    # do_task1(train, label, test)
+    # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
+    # task 1
+    # do_task1()
+
+    # task 3
+    # new_train = feature_Univarselection(train, label, Alpha)
+    do_task3(train,label,test)
+
 
 # kfold = 20
 # loss = np.inf
