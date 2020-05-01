@@ -170,14 +170,15 @@ def feature_selectionfrommodel(data, y, num_feature):
     return new_data
 
 
-def feature_selection(data,y,num_feature):
+def feature_selection(data,y,num_feature,test):
 	select = SelectKBest(f_regression, k=num_feature).fit(data,y)
 	#select = SelectFromModel(estimator=Lasso(), threshold=-np.inf, max_features=num_feature).fit(data,y)
 	new_data = select.transform(data);
+	new_test = select.transform(test);
 	idx = select.get_support()
 	#print(idx)
 	#new_data = np.delete(new_data,idx,1)
-	return new_data
+	return new_data, new_test
 	
 def feature_selection_by_corre(data,y):
 	for i in range(21):
@@ -205,7 +206,7 @@ def xgb(X,y):
 	xg_reg.fit(X,y);
 	return xg_reg;
 
-def cross_validation(data, Y_train, kfold):
+def cross_validation(data, Y_train, test):
 
     score = 0
     score_train = 0
@@ -214,6 +215,7 @@ def cross_validation(data, Y_train, kfold):
     alpha = 10
     weight = 0
     m, n = data.shape
+    pred = []
     for train_index, val_index in kf.split(data):
         x_train, x_val = data[train_index], data[val_index]
         y_train, y_val = Y_train[train_index], Y_train[val_index]
@@ -223,28 +225,33 @@ def cross_validation(data, Y_train, kfold):
         y_val_pred = reg.predict(x_val)
         # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
         score += roc_auc_score(y_val, y_val_pred) * len(y_val)
+        
+        pred.append(reg.predict(test));
     # score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
     # weight += reg.coef_
-    return (score / len(Y_train))
+    return (score / len(Y_train)), np.mean(np.array(pred),0)
 
-def cross_validation_reg(data, Y_train, kfold):
+def cross_validation_reg(data, Y_train, test):
     score = 0
     score_train = 0
-    # kfold = 2
+    kfold = 5
     kf = KFold(n_splits = kfold)
     weight = 0
     m,n = data.shape
-
+    pred = [];
     for train_index, val_index in kf.split(data):
         x_train, x_val= data[train_index], data[val_index]
         y_train, y_val = Y_train[train_index], Y_train[val_index]
         # print(len(y_val), len(Y_train))
         reg = regression(x_train, y_train)
         y_val_pred = reg.predict(x_val) # shape: (n_sample, n_class)
+        
+        pred.append(reg.predict(test));
 
         score += (0.5 + 0.5 * np.maximum(0, r2_score(y_val, y_val_pred)))*len(y_val)
 
-    return (score / len(Y_train))
+    return (score / len(Y_train)), np.mean(np.array(pred),0)
+    
 def print_to_csv(weight, idx):
     j = 0;
     weight_ = np.zeros(21);
@@ -261,42 +268,52 @@ def print_to_csv(weight, idx):
 
 def do_task1(train, label_data, test):
     total_score = [];
-    print("using 10 % of data");
+    submit = pd.DataFrame()
+    test_id = test.sort_values('pid').index
+    submit['pid'] = test_id
     for label in TESTS:
         print(label)
         x_data = train.sort_values('pid').values;
         x_label = label_data.sort_values('pid')[label].values;
 
         # do feature selection before training
-        x_data = feature_selection(x_data, x_label, 70);
-        score = cross_validation(x_data, x_label, 20);
+        x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
+        score, pred = cross_validation(x_data, x_label, test_selected);
+        submit[label] = pred;
         total_score.append(score);
         print("score of {}:{}".format(label, score));
     print("average score of subtask1:{}".format(mean(total_score)));
+    submit.to_csv('submission.csv',index=False)
     return
 
 
 
 def do_task2(train, label_data, test):
     print(sep)
+    submit = pd.read_csv('submission.csv');
     x_data = train.sort_values('pid').values;
     x_label = label_data.sort_values('pid')[sep].values;
-    score = cross_validation(x_data, x_label, 20);
+    score, pred = cross_validation(x_data, x_label, test.sort_values('pid').values);
+    submit[sep] = pred;
+    submit.to_csv('submission.csv',index=False)
     print("score of {}:{}".format(sep, score));
     return
 
 def do_task3(train, label_data, test):
     mean_score = 0
+    submit = pd.read_csv('submission.csv');
     for label in VITALS:
         print(label)
         # --- Do regression tasks
         x_data = train.sort_values('pid').values
         x_label = label_data.sort_values('pid')[label].values
 
-        score = cross_validation_reg(x_data, x_label, 5)
+        score, pred = cross_validation_reg(x_data, x_label, test.sort_values('pid').values)
+        submit[label] = pred;
         print("score of {}:{}".format(label, score))
         mean_score += score
     print("mean score: {}".format(mean_score/len(VITALS)))
+    submit.to_csv('submission.csv',index=False)
 
     return
 def main():
@@ -304,22 +321,25 @@ def main():
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
-    # train, test, label = data_process(train_path, test_path, label_path);  # still return pandaFrame
+    train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
 
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
-    # print("starting subtask1");
-    # do_task1(train, label, test)
-    # print("finish subtask1");
+    print("starting subtask1");
+    do_task1(train, label, test)
+    print("finish subtask1");
     # # task 2
     # train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
     # # new_train = feature_selectionKbest(train,label,num_feature)
     # new_train = feature_Univarselection(train, label, Alpha)
-    # # new_train = feature_selectionfrommodel(train,label,num_feature)
-    # print("starting subtask2");
-    # do_task2(new_train, label, test)
-    # print("finish subtask2");
-
+    # new_train = feature_selectionfrommodel(train,label,num_feature)
+    print("starting subtask2");
+    do_task2(train, label, test)
+    print("finish subtask2");
+    
+    # zip file generation
+    submit = pd.read_csv('submission.csv');
+    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
 
 
 
@@ -333,7 +353,9 @@ def main():
 
     # task 3
     # new_train = feature_Univarselection(train, label, Alpha)
+    print("starting subtask3");
     do_task3(train,label,test)
+    print("finish subtask3");
 
 
 # kfold = 20
