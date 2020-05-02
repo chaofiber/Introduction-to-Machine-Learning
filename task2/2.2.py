@@ -8,7 +8,7 @@ from sklearn import preprocessing
 import math
 import csv
 from xgboost import XGBRegressor
-
+import random
 
 from sklearn.feature_selection import SelectKBest, SelectFpr, SelectFdr, SelectFwe, f_classif, chi2, f_regression,SelectFromModel
 from sklearn.svm import SVR, SVC, LinearSVC
@@ -206,11 +206,14 @@ def xgb(X,y):
 	xg_reg.fit(X,y);
 	return xg_reg;
 
+def logistic(X,y):
+	clf = LogisticRegression(solver='liblinear', multi_class='auto', class_weight='balanced',max_iter=500).fit(X, y)
+	return clf;
+	
 def cross_validation(data, Y_train, test):
-
     score = 0
     score_train = 0
-    kfold = 5
+    kfold = 10
     kf = KFold(n_splits=kfold)
     alpha = 10
     weight = 0
@@ -221,6 +224,7 @@ def cross_validation(data, Y_train, test):
         y_train, y_val = Y_train[train_index], Y_train[val_index]
         # reg = svc(x_train, y_train)
         reg = xgb(x_train, y_train)
+        #reg = logistic(x_train,y_train)
         # y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
         y_val_pred = reg.predict(x_val)
         # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
@@ -245,7 +249,7 @@ def cross_validation_reg(data, Y_train, test):
         # print(len(y_val), len(Y_train))
         reg = regression(x_train, y_train)
         y_val_pred = reg.predict(x_val) # shape: (n_sample, n_class)
-        
+        print(y_val_pred)
         pred.append(reg.predict(test));
 
         score += (0.5 + 0.5 * np.maximum(0, r2_score(y_val, y_val_pred)))*len(y_val)
@@ -279,13 +283,14 @@ def do_task1(train, label_data, test):
         # do feature selection before training
         x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
         score, pred = cross_validation(x_data, x_label, test_selected);
+
         submit[label] = pred;
+        
         total_score.append(score);
         print("score of {}:{}".format(label, score));
     print("average score of subtask1:{}".format(mean(total_score)));
     submit.to_csv('submission.csv',index=False)
     return
-
 
 
 def do_task2(train, label_data, test):
@@ -294,6 +299,7 @@ def do_task2(train, label_data, test):
     x_data = train.sort_values('pid').values;
     x_label = label_data.sort_values('pid')[sep].values;
     score, pred = cross_validation(x_data, x_label, test.sort_values('pid').values);
+    # submit[sep] = random.random()
     submit[sep] = pred;
     submit.to_csv('submission.csv',index=False)
     print("score of {}:{}".format(sep, score));
@@ -303,17 +309,19 @@ def do_task3(train, label_data, test):
     mean_score = 0
     submit = pd.read_csv('submission.csv');
     for label in VITALS:
-        print(label)
+        # print(label)
         # --- Do regression tasks
         x_data = train.sort_values('pid').values
         x_label = label_data.sort_values('pid')[label].values
 
         score, pred = cross_validation_reg(x_data, x_label, test.sort_values('pid').values)
-        submit[label] = pred;
+        submit[label] = pred
+        # submit[label] = 100*random.random()
         print("score of {}:{}".format(label, score))
         mean_score += score
     print("mean score: {}".format(mean_score/len(VITALS)))
-    submit.to_csv('submission.csv',index=False)
+    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
+    #submit.to_csv('submission.csv',index=False)
 
     return
 def main():
@@ -321,14 +329,14 @@ def main():
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
-    train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
-
+    # train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
+    train, test, label = data_process_mean(train_path, test_path, label_path)
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
     print("starting subtask1");
     do_task1(train, label, test)
     print("finish subtask1");
-    # # task 2
+    # task 2
     # train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
     # # new_train = feature_selectionKbest(train,label,num_feature)
     # new_train = feature_Univarselection(train, label, Alpha)
@@ -337,38 +345,16 @@ def main():
     do_task2(train, label, test)
     print("finish subtask2");
     
-    # zip file generation
-    submit = pd.read_csv('submission.csv');
-    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
-
-
 
 # task 3
-    train, test, label = data_process_mean(train_path, test_path, label_path)
-    # do_task1(train, label, test)
-    # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
-    # task 1
-    # do_task1()
 
 
-    # task 3
+    # train, test, label = data_process_mean(train_path, test_path, label_path)
     # new_train = feature_Univarselection(train, label, Alpha)
     print("starting subtask3");
     do_task3(train,label,test)
     print("finish subtask3");
+    
 
 
-# kfold = 20
-# loss = np.inf
-# weight_ = np.zeros(21)
-# for num_feature in range(10,15):
-#		data_, idx = feature_selection(data, Y_train,num_feature)
-#		weight , val_loss = cross_validation(data_, Y_train, kfold)
-#		if val_loss<loss:
-#			loss = val_loss;
-#			weight_ = weight;
-#			best_num = num_feature;
-#			idx_ = idx;
-
-# data, idx = feature_selection(data, Y_train,num_feature)
 main()
