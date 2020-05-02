@@ -284,9 +284,7 @@ def do_task1(train, label_data, test):
         # do feature selection before training
         x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
         score, pred = cross_validation(x_data, x_label, test_selected);
-        
-        reg = xgb(x_data, x_label);
-        pred = reg.predict(test_selected)
+
         submit[label] = pred;
         
         total_score.append(score);
@@ -364,17 +362,4 @@ def main():
     
 
 
-# kfold = 20
-# loss = np.inf
-# weight_ = np.zeros(21)
-# for num_feature in range(10,15):
-#		data_, idx = feature_selection(data, Y_train,num_feature)
-#		weight , val_loss = cross_validation(data_, Y_train, kfold)
-#		if val_loss<loss:
-#			loss = val_loss;
-#			weight_ = weight;
-#			best_num = num_feature;
-#			idx_ = idx;
-
-# data, idx = feature_selection(data, Y_train,num_feature)
 main()
