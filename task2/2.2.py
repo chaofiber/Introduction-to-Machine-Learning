@@ -206,11 +206,15 @@ def xgb(X,y):
 	xg_reg.fit(X,y);
 	return xg_reg;
 
+def logistic(X,y):
+	clf = LogisticRegression(solver='liblinear', multi_class='auto', class_weight='balanced',max_iter=500).fit(X, y)
+	return clf;
+	
 def cross_validation(data, Y_train, test):
 
     score = 0
     score_train = 0
-    kfold = 5
+    kfold = 10
     kf = KFold(n_splits=kfold)
     alpha = 10
     weight = 0
@@ -221,6 +225,7 @@ def cross_validation(data, Y_train, test):
         y_train, y_val = Y_train[train_index], Y_train[val_index]
         # reg = svc(x_train, y_train)
         reg = xgb(x_train, y_train)
+        #reg = logistic(x_train,y_train)
         # y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
         y_val_pred = reg.predict(x_val)
         # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
@@ -279,7 +284,11 @@ def do_task1(train, label_data, test):
         # do feature selection before training
         x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
         score, pred = cross_validation(x_data, x_label, test_selected);
+        
+        reg = xgb(x_data, x_label);
+        pred = reg.predict(test_selected)
         submit[label] = pred;
+        
         total_score.append(score);
         print("score of {}:{}".format(label, score));
     print("average score of subtask1:{}".format(mean(total_score)));
@@ -313,7 +322,8 @@ def do_task3(train, label_data, test):
         print("score of {}:{}".format(label, score))
         mean_score += score
     print("mean score: {}".format(mean_score/len(VITALS)))
-    submit.to_csv('submission.csv',index=False)
+    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
+    #submit.to_csv('submission.csv',index=False)
 
     return
 def main():
@@ -337,11 +347,6 @@ def main():
     do_task2(train, label, test)
     print("finish subtask2");
     
-    # zip file generation
-    submit = pd.read_csv('submission.csv');
-    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
-
-
 
 # task 3
     train, test, label = data_process_mean(train_path, test_path, label_path)
@@ -356,6 +361,7 @@ def main():
     print("starting subtask3");
     do_task3(train,label,test)
     print("finish subtask3");
+    
 
 
 # kfold = 20
