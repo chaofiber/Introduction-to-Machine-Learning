@@ -390,8 +390,8 @@ def do_task3(train, label_data, test):
         print("score of {}:{}".format(label, score))
         mean_score += score
     print("mean score: {}".format(mean_score/len(VITALS)))
-    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
-    #submit.to_csv('submission.csv',index=False)
+    #submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
+    submit.to_csv('submission.csv',index=False)
 
     return
 def main():
