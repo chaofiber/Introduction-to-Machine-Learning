@@ -57,8 +57,34 @@ def data_processnorm(train_path, test_path, label_path):
     print('testing data size after feature augmentation:');
     print(test.shape)
 
-    train = train.fillna(0);
-    test = test.fillna(0);
+    train = train.interpolate('pad');
+    test = test.interpolate('pad');
+
+    # MinMax normalization
+    min_max_scaler = preprocessing.MinMaxScaler()
+    for indextrain in train.columns:
+        train[indextrain] = min_max_scaler.fit_transform(train[indextrain])
+    min_max_scaler2 = preprocessing.MinMaxScaler()
+    for indextest in train.columns:
+        test[indextest] = min_max_scaler2.fit_transform(test[indextrain])
+    # if we should do normalization? if we set the nan to zero.
+
+    return train, test, label
+
+def data_processnorm2(train_path, test_path, label_path):
+    train = load_data(train_path)
+    test = load_data(test_path)
+    label = load_data(label_path)
+
+    train = feature_augment2(train);
+    print('training data size after feature augmentation:');
+    print(train.shape)
+    test = feature_augment2(test);
+    print('testing data size after feature augmentation:');
+    print(test.shape)
+
+    train = train.interpolate('pad');
+    test = test.interpolate('pad');
 
     # MinMax normalization
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -104,6 +130,18 @@ def feature_augment(data):
     min_data = data.groupby('pid').min();
     median_data = data.groupby('pid').median();
     data = pd.concat([mean_data, max_data, min_data, median_data], axis=1)
+    return data
+
+def feature_augment2(data):
+    mean_data = data.groupby('pid').mean();
+    max_data = data.groupby('pid').max();
+    min_data = data.groupby('pid').min();
+    median_data = data.groupby('pid').median();
+    std_data = data.groupby('pid').std();
+    quan1_data = data.groupby('pid').quantile(.25);
+    quan2_data = data.groupby('pid').quantile(.75);   
+    count_data = data.groupby('pid').count();
+    data = pd.concat([mean_data, max_data, min_data, median_data,std_data,quan1_data,quan2_data,count_data], axis=1)
     return data
 
 
@@ -206,6 +244,13 @@ def xgb(X,y):
 	xg_reg.fit(X,y);
 	return xg_reg;
 
+def xgb2(X,y):
+	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.31, learning_rate = 0.06,
+	max_depth =6 , alpha = 10,n_estimators = 121);
+	xg_reg.fit(X,y);
+	return xg_reg;
+
+
 def logistic(X,y):
 	clf = LogisticRegression(solver='liblinear', multi_class='auto', class_weight='balanced',max_iter=500).fit(X, y)
 	return clf;
@@ -225,6 +270,31 @@ def cross_validation(data, Y_train, test):
         # reg = svc(x_train, y_train)
         reg = xgb(x_train, y_train)
         #reg = logistic(x_train,y_train)
+        # y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
+        y_val_pred = reg.predict(x_val)
+        # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
+        score += roc_auc_score(y_val, y_val_pred) * len(y_val)
+        
+        pred.append(reg.predict(test));
+    # score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
+    # weight += reg.coef_
+    return (score / len(Y_train)), np.mean(np.array(pred),0)
+
+def cross_validation_task2(data, Y_train, test):
+
+    score = 0
+    score_train = 0
+    kfold = 5
+    kf = KFold(n_splits=kfold)
+    alpha = 10
+    weight = 0
+    m, n = data.shape
+    pred = []
+    for train_index, val_index in kf.split(data):
+        x_train, x_val = data[train_index], data[val_index]
+        y_train, y_val = Y_train[train_index], Y_train[val_index]
+        # reg = svc(x_train, y_train)
+        reg = xgb2(x_train, y_train)
         # y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
         y_val_pred = reg.predict(x_val)
         # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
@@ -298,7 +368,7 @@ def do_task2(train, label_data, test):
     submit = pd.read_csv('submission.csv');
     x_data = train.sort_values('pid').values;
     x_label = label_data.sort_values('pid')[sep].values;
-    score, pred = cross_validation(x_data, x_label, test.sort_values('pid').values);
+    score, pred = cross_validation_task2(x_data, x_label, test.sort_values('pid').values);
     # submit[sep] = random.random()
     submit[sep] = pred;
     submit.to_csv('submission.csv',index=False)
@@ -329,8 +399,8 @@ def main():
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
-    # train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
-    train, test, label = data_process_mean(train_path, test_path, label_path)
+    train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
+    #train, test, label = data_process_mean(train_path, test_path, label_path)
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
     print("starting subtask1");
@@ -342,6 +412,7 @@ def main():
     # new_train = feature_Univarselection(train, label, Alpha)
     # new_train = feature_selectionfrommodel(train,label,num_feature)
     print("starting subtask2");
+    train, test, label = data_processnorm2(train_path, test_path, label_path);  
     do_task2(train, label, test)
     print("finish subtask2");
     
@@ -349,7 +420,7 @@ def main():
 # task 3
 
 
-    # train, test, label = data_process_mean(train_path, test_path, label_path)
+    train, test, label = data_process_mean(train_path, test_path, label_path)
     # new_train = feature_Univarselection(train, label, Alpha)
     print("starting subtask3");
     do_task3(train,label,test)
