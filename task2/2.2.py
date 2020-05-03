@@ -57,16 +57,7 @@ def data_processnorm(train_path, test_path, label_path):
     print('testing data size after feature augmentation:');
     print(test.shape)
 
-    train = train.interpolate('pad');
-    test = test.interpolate('pad');
-
     # MinMax normalization
-    min_max_scaler = preprocessing.MinMaxScaler()
-    for indextrain in train.columns:
-        train[indextrain] = min_max_scaler.fit_transform(train[indextrain])
-    min_max_scaler2 = preprocessing.MinMaxScaler()
-    for indextest in train.columns:
-        test[indextest] = min_max_scaler2.fit_transform(test[indextrain])
     # if we should do normalization? if we set the nan to zero.
 
     return train, test, label
@@ -83,16 +74,7 @@ def data_processnorm2(train_path, test_path, label_path):
     print('testing data size after feature augmentation:');
     print(test.shape)
 
-    train = train.interpolate('pad');
-    test = test.interpolate('pad');
-
     # MinMax normalization
-    min_max_scaler = preprocessing.MinMaxScaler()
-    for indextrain in train.columns:
-        train[indextrain] = min_max_scaler.fit_transform(train[indextrain])
-    min_max_scaler2 = preprocessing.MinMaxScaler()
-    for indextest in train.columns:
-        test[indextest] = min_max_scaler2.fit_transform(test[indextrain])
     # if we should do normalization? if we set the nan to zero.
 
     return train, test, label
@@ -245,8 +227,8 @@ def xgb(X,y):
 	return xg_reg;
 
 def xgb2(X,y):
-	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.31, learning_rate = 0.06,
-	max_depth =6 , alpha = 10,n_estimators = 121);
+	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.31, learning_rate = 0.05,
+	max_depth =5 , alpha = 10,n_estimators = 121);
 	xg_reg.fit(X,y);
 	return xg_reg;
 
@@ -351,8 +333,8 @@ def do_task1(train, label_data, test):
         x_label = label_data.sort_values('pid')[label].values;
 
         # do feature selection before training
-        x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
-        score, pred = cross_validation(x_data, x_label, test_selected);
+        #x_data, test_selected = feature_selection(x_data, x_label, 70,test.sort_values('pid').values);
+        score, pred = cross_validation(x_data, x_label, test.sort_values('pid').values);
 
         submit[label] = pred;
         
