@@ -86,7 +86,7 @@ def data_process_mean(train_path,test_path,label_path):
     train = feature_augment(train);
     print('training data size after feature augmentation:');
     print(train.shape)
-    test = feature_augment(test);
+    test = feature_augment2(test);
     print('testing data size after feature augmentation:');
     print(test.shape)
 
@@ -372,8 +372,8 @@ def do_task3(train, label_data, test):
         print("score of {}:{}".format(label, score))
         mean_score += score
     print("mean score: {}".format(mean_score/len(VITALS)))
-    #submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
-    submit.to_csv('submission.csv',index=False)
+    submit.to_csv('prediction.zip', index=False, float_format='%.3f', compression='zip')
+    #submit.to_csv('submission.csv',index=False)
 
     return
 def main():
@@ -381,7 +381,7 @@ def main():
     train_path = './train_features.csv';
     test_path = './test_features.csv';
     label_path = './train_labels.csv';
-    train, test, label = data_processnorm(train_path, test_path, label_path);  # still return pandaFrame
+    train, test, label = data_processnorm2(train_path, test_path, label_path);  # still return pandaFrame
     #train, test, label = data_process_mean(train_path, test_path, label_path)
     # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
     # task 1
@@ -402,7 +402,7 @@ def main():
 # task 3
 
 
-    train, test, label = data_process_mean(train_path, test_path, label_path)
+    train, test, label = data_processnorm2(train_path, test_path, label_path)
     # new_train = feature_Univarselection(train, label, Alpha)
     print("starting subtask3");
     do_task3(train,label,test)
