@@ -1,12 +1,20 @@
 1. 处理txt:
 https://www.cnblogs.com/hackpig/p/8215786.html
 
-2. 图片特征提取image feature extraction (都是keras的)
+2. 图片特征提取image feature extraction/encoding (都是keras的)
     a. 菜谱和食物图片匹配：https://towardsdatascience.com/this-ai-is-hungry-b2a8655528be （预训练模型特征提取部分与这个题应该是比较类似的）
         代码: https://github.com/Murgio/Food-Recipe-CNN
     
-     b. 抽取特征并降维：https://zhuanlan.zhihu.com/p/37583508  
+    b. 抽取特征并降维：https://zhuanlan.zhihu.com/p/37583508  
          代码：  https://github.com/jackhuntcn/notebooks/blob/master/autoencoder_and_clustering.ipynb（不是预训练模型）
-                      https://github.com/lvdevmode/FeatureExtraction/blob/master/keras_featureExtraction_cifar10.py（用预训练模型）
+                 https://github.com/lvdevmode/FeatureExtraction/blob/master/keras_featureExtraction_cifar10.py（用预训练模型）
+                      
+3. 之后可以用三元组网络triplet network & loss(但如何输出测试集每个三元组的0 1标签呢？用每个三元组的triplet loss判断？)
+   或者每个三元组取出三个二元组然后自己设置标签做二分类？
+   a. 三元组(triplet loss)：https://www.coursera.org/lecture/convolutional-neural-networks/triplet-loss-HuUtN （视频课）
+      代码： https://github.com/Ao-Lee/Vgg-Face-Fine-tune/blob/master/train.py （keras的 triplet loss & 预训模型VGGface）
+   
+   
+   b. 二分类：https://www.coursera.org/lecture/convolutional-neural-networks/face-verification-and-binary-classification-xTihv （视频课）
 
-3. 可能还要用到os 和hdf5?
+4. 可能还要用到os 和hdf5?
