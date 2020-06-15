@@ -16,8 +16,8 @@ from sklearn.svm import SVR, SVC, LinearSVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from scipy import stats
-from statistics import mean 
-
+from statistics import mean
+from data import DataSet
 
 num_feature = 60
 Alpha = 0.01
@@ -86,12 +86,6 @@ def data_process(train_path, test_path):
     return train, test
 
 
-
-def load_data(train_list, test_list):
-	
-	for item in train_list:
-		image = 
-    return data
     
 
 
@@ -151,26 +145,28 @@ def do_task(train, label_data, test):
 def main():
     train_path = './train_triplets.txt';
     test_path = './test_triplets.txt';
+    data_saved = True
     train_list = []
     test_list = []
-	with open(train_path) as f:
-		for line in f:
-			inner_list = [elt for elt in line.split(' ')]
-			train_list.append(inner_list)
-			
-	with open(test_path) as f:
-		for line in f:
-			inner_list = [elt for elt in line.split(' ')]
-			test_list.append(inner_list)	
-			
-    train, test = load_data(train_list, test_list);  # still return pandaFrame
-    #train, test, label = encoder(train_path, test_path); 
-    print(train)
-    print(label)
-    do_task(train, label, test)
-    print("finish task3");
-    # if need values, just use 'train.values' it will return numpy array, label['LABEL_ABPm'].values to return labels.
-    
+    with open(train_path) as f:
+        for line in f:
+            line = line.rstrip('\n')
+            inner_list = [elt for elt in line.split(' ')]
+            train_list.append(inner_list)
+
+
+    with open(test_path) as f:
+        for line in f:
+            line = line.rstrip('\n')
+            inner_list = [elt for elt in line.split(' ')]
+            test_list.append(inner_list)	
+
+
+    data = DataSet(train_list,test_list)
+    if data_saved:
+        buffer = np.load('buffer.npy')
+    else:
+        buffer = data.compress_data_to_numpy()
 
 
 main()
