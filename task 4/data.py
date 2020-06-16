@@ -64,6 +64,6 @@ class DataSet():
 			image_array = np.asarray(image)/255.0
 			data.append(image_array)
 			count += 1
-			print("collecting sample: ", count)
+			# print("collecting sample: ", count)
 		np.save('buffer',data)
 		return data
