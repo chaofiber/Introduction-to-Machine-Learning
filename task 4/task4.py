@@ -13,6 +13,9 @@ import math
 import csv
 from xgboost import XGBRegressor
 import random
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 from sklearn.feature_selection import SelectKBest, SelectFpr, SelectFdr, SelectFwe, f_classif, chi2, f_regression, \
     SelectFromModel
@@ -58,7 +61,7 @@ def do_task(train, label_data, test):
 def main():
     train_path = './train_triplets.txt';
     test_path = './test_triplets.txt';
-    data_saved = True
+    data_saved = False
     train_list = []
     test_list = []
     with open(train_path) as f:
@@ -93,7 +96,7 @@ def main():
     boolean = lambda x: bool(['False', 'True'].index(x))
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', default=32, type=int, help='batch_size')
-    parser.add_argument('--lr', default=0.0001, type=float, help='learning rate')
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--Ischeckpoint', default=False, type=boolean, help='If load the saved model')
     parser.add_argument('--nb_epochs', default=20, type=int, help='epochs')
 
@@ -101,15 +104,20 @@ def main():
 
     model = Model(opt)
 
+    train_list_ = random.sample(train_list,int(len(train_list)*0.1))
+
     for epoch in range(opt.nb_epochs):
 
-        temp = random.sample(train_list,len(train_list))
+        temp = random.sample(train_list_,len(train_list_))
         mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
         
         for iteration, mini_batch in enumerate(mini_batches):
 
             Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
-            model.update(Image)
+            loss = model.update(Image)
+
+            if iteration % 10 == 0:
+                print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
 
 
 

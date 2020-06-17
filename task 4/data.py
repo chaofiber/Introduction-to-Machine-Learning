@@ -60,11 +60,11 @@ class DataSet():
 		for i in range(10000):
 			filename = "food/"+ str(i).zfill(5) + ".jpg"
 			image = Image.open(filename)
-			image = image.resize((28,28))
-			image_array = np.asarray(image)/255.0
+			image = image.resize((224,224))
+			image_array = np.asarray(image)
 			data.append(image_array)
 			count += 1
-			# print("collecting sample: ", count)
+			print("collecting sample: ", count)
 		np.save('buffer',data)
 		return data
 
