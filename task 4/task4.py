@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from PIL import Image
+import argparse
+from Model import Model
 from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge, Lasso, RidgeCV, SGDClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, KFold
@@ -20,98 +22,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from scipy import stats
 from statistics import mean
 from data import DataSet
-from alex import triplet_loss,get_alex,triplet_loss_np
+# from alex import triplet_loss,get_alex,triplet_loss_np
 num_feature = 60
 Alpha = 0.01
 Amino_acids = np.array(
     ['R', 'H', 'K', 'D', 'E', 'S', 'T', 'N', 'Q', 'C', 'U', 'G', 'P', 'A', 'I', 'L', 'M', 'F', 'W', 'Y', 'V'])
 
-
-def encoder_sparse(train_path, test_path):
-    train = load_data(train_path)
-    test = load_data(test_path)
-    n_train, m_train = train.shape
-    n_test, m_test = test.shape
-    new_train = np.zeros(n_train * 84).reshape(n_train, 84)
-    new_test = np.zeros(n_test * 84).reshape(n_test, 84)
-    Seq_train = train['Sequence'].values
-    Seq_test = test['Sequence'].values
-    label = train['Active'].values
-    for train_idx in range(n_train):
-        seq_train_arr = np.array(list(Seq_train[train_idx]))
-        for i in range(4):
-            seq_train_idx = int(np.where(Amino_acids == seq_train_arr[i])[0])
-            new_train[train_idx, i * 21 + seq_train_idx] = 1
-
-    for test_idx in range(n_test):
-        seq_test_arr = np.array(list(Seq_test[test_idx]))
-        for j in range(4):
-            seq_test_idx = int(np.where(Amino_acids == seq_test_arr[j])[0])
-            new_test[test_idx, j * 21 + seq_test_idx] = 1
-
-    return new_train, new_test, label
-
-
-def encoder(train_path, test_path):
-    train = load_data(train_path)
-    test = load_data(test_path)
-    n_train, m_train = train.shape
-
-    n_test, m_test = test.shape
-    new_train = np.zeros(n_train * 4).reshape(n_train, 4)
-    new_test = np.zeros(n_test * 4).reshape(n_test, 4)
-    Seq_train = train['Sequence'].values
-    Seq_test = test['Sequence'].values
-    label = train['Active'].values
-    for train_idx in range(n_train):
-        seq_train_arr = np.array(list(Seq_train[train_idx]))
-        for i in range(4):
-            seq_train_idx = int(np.where(Amino_acids == seq_train_arr[i])[0])
-            new_train[train_idx, i] = seq_train_idx
-
-    for test_idx in range(n_test):
-        seq_test_arr = np.array(list(Seq_test[test_idx]))
-        for j in range(4):
-            seq_test_idx = int(np.where(Amino_acids == seq_test_arr[j])[0])
-            new_test[test_idx, j] = seq_test_idx
-
-    # if we should do normalization? if we set the nan to zero.
-
-    return new_train, new_test, label
-
-
-def data_process(train_path, test_path):
-    train = load_data(train_path)
-    test = load_data(test_path)
-
-    # if we should do normalization? if we set the nan to zero.
-
-    return train, test
-
-
-def cross_validation(data, Y_train, test):
-    score = 0
-    score_train = 0
-    kfold = 10
-    kf = KFold(n_splits=kfold)
-    alpha = 10
-    weight = 0
-    m, n = data.shape
-    for train_index, val_index in kf.split(data):
-        x_train, x_val = data[train_index], data[val_index]
-        y_train, y_val = Y_train[train_index], Y_train[val_index]
-        # reg = svc(x_train, y_train)
-        reg = xgb(x_train, y_train)
-        # reg = logistic(x_train,y_train)
-        # y_val_pred = reg.predict_proba(x_val) # shape: (n_sample, n_class)
-        y_val_pred = reg.predict(x_val)
-        # score += roc_auc_score(y_val, y_val_pred[:,1]) * len(y_val)
-        score += f1_score(y_val, y_val_pred) * len(y_val)
-
-        pred = reg.predict(test);
-    # score_train += (mean_squared_error(reg.predict(x_train), y_train)) * len(y_train)
-    # weight += reg.coef_
-    return (score / len(Y_train)), np.array(pred)
 
 
 def print_to_csv(weight, idx):
@@ -166,13 +82,34 @@ def main():
         buffer = data.compress_data_to_numpy()
     # train, test = data.get_data()
     # --- 训练部分
-    model = get_alex(resize = 28)
-    model.compile(optimizer=tf.optimizers.Adam(0.01),
-                  loss=triplet_loss_np,  # mean squared error
-                  metrics=['accuracy'])
-    model.fit(data, epochs=10, steps_per_epoch=30,
-              validation_data=test,
-              validation_steps=3)
+    # model = get_alex(resize = 28)
+    # model.compile(optimizer=tf.optimizers.Adam(0.01),
+    #               loss=triplet_loss_np,  # mean squared error
+    #               metrics=['accuracy'])
+    # model.fit(data, epochs=10, steps_per_epoch=30,
+    #           validation_data=test,
+    #           validation_steps=3)
+
+    boolean = lambda x: bool(['False', 'True'].index(x))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch_size', default=32, type=int, help='batch_size')
+    parser.add_argument('--lr', default=0.0001, type=float, help='learning rate')
+    parser.add_argument('--Ischeckpoint', default=False, type=boolean, help='If load the saved model')
+    parser.add_argument('--nb_epochs', default=20, type=int, help='epochs')
+
+    opt = parser.parse_args()
+
+    model = Model(opt)
+
+    for epoch in range(opt.nb_epochs):
+
+        temp = random.sample(train_list,len(train_list))
+        mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
+        
+        for iteration, mini_batch in enumerate(mini_batches):
+
+            Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
+            model.update(Image)
 
 
 
