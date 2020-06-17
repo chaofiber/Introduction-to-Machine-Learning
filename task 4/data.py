@@ -67,3 +67,18 @@ class DataSet():
 			# print("collecting sample: ", count)
 		np.save('buffer',data)
 		return data
+
+	def get_batch(self,buffer,mini_batch):
+
+		batch = []
+
+		for item in mini_batch:
+			sample = []
+			sample.append(buffer[int(item[0])])
+			sample.append(buffer[int(item[1])])
+			sample.append(buffer[int(item[2])])
+			batch.append(sample)
+
+		return batch
+
+
