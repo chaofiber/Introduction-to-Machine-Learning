@@ -50,7 +50,6 @@ class DataSet():
     #     # index = np.random.randint(0, self.num_train_data, batch_size)
     #     return self.buffer[batch, :]
     def get_batch(self, mini_batch):
-
         batch = []
         for item in mini_batch:
             sample = []
@@ -60,6 +59,11 @@ class DataSet():
             batch.append(sample)
 
         return np.array(batch)
+    def get_batch_test(self,mini_batch):
+        batch = []
+        for item in mini_batch:
+            batch.append(self.buffer[int(item)])
+        return np.array([batch])
 
     def split_train_val(self, data, train_ratio):
 

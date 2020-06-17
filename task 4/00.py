@@ -62,7 +62,7 @@ class CNN(tf.keras.Model):
 # 以下代码结构与前节类似
 num_epochs = 10
 batch_size = 16
-learning_rate = 0.001
+learning_rate = 0.005
 model = CNN()
 train_path = './train_triplets.txt'
 test_path = './test_triplets.txt'
@@ -85,7 +85,8 @@ data_loader = DataSet(train_list, test_list)
 
 # buffer = np.load('buffer.npy')
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+# optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 # num_batches = int(data_loader.num_train_data // batch_size * num_epochs)
 # print('number of batches: ',num_batches)
 # index = [i for i in range(data_loader.num_train_data)]
@@ -94,6 +95,26 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 # for batch_index in range(num_batches):
 
 for epoch in range(num_epochs):
+    temp = random.sample(train_list, int(len(train_list) * 0.01))
+    test_names = [temp[k] for k in range(0, len(temp))]
+    corr_num = 0
+    test_total_loss = 0
+    for test_iter, mini_batch in enumerate(test_names):
+        X = data_loader.get_batch_test(mini_batch)  # 3 * 28 * 28* 3
+        anchor,pos,neg = X[:,0],X[:,1],X[:,2]
+        anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
+        positive_distance = np.mean(np.square(anchor_emb - positive_emb))
+        negative_distance = np.mean(np.square(anchor_emb - negative_emb))
+
+        loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
+        test_total_loss += loss
+        # print('loss value for {}: {}'.format(mini_batch,loss))
+        if positive_distance < negative_distance:
+            corr_num += 1
+    test_avg_loss = test_total_loss/len(test_names)
+    accuracy = corr_num/len(test_names)
+    print('accuracy ',accuracy,' test avg loss: ',test_avg_loss)
+
 
     # temp = random.sample(train_list, len(train_list))
     temp = random.sample(train_list, int(len(train_list)*0.1))
@@ -108,7 +129,8 @@ for epoch in range(num_epochs):
             anchor,pos,neg = X[:,0],X[:,1],X[:,2]
             anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
             loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
-        if iteration % 5 == 0:
+        if iteration % 20 == 0:
             print("epoch %d : batch %d: loss %f" % (epoch, iteration, loss.numpy()))
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(grads_and_vars=zip(grads, model.trainable_variables))
+
