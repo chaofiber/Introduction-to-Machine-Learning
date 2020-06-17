@@ -65,13 +65,13 @@ class DataSet():
             batch.append(self.buffer[int(item)])
         return np.array([batch])
 
-    def split_train_val(self, data, train_ratio):
+    def split_train_val(self,train_list,train_ratio):
 
         random.shuffle(data)
-        train = data[0:int(train_ratio * len(data))]
-        validation = data[ int(train_ratio * len(data)) ];
+        train = train_list[0:int(train_ratio*len(data))]
+        validation = train_list[int(train_ratio*len(data))];
 
-        return train, validation
+        return train,validation
 
     def compress_data_to_numpy(self):
         data = []

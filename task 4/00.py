@@ -93,9 +93,9 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 # mini_batches = [ index[k:k+batch_size]
 #                  for k in range(0,data_loader.num_train_data-batch_size,batch_size)]
 # for batch_index in range(num_batches):
-
+train_list,val_list = data_loader.split_train_val(train_list,0.9)
 for epoch in range(num_epochs):
-    temp = random.sample(train_list, int(len(train_list) * 0.01))
+    temp = random.sample(val_list, int(len(val_list) * 0.01))
     test_names = [temp[k] for k in range(0, len(temp))]
     corr_num = 0
     test_total_loss = 0
@@ -117,7 +117,7 @@ for epoch in range(num_epochs):
 
 
     # temp = random.sample(train_list, len(train_list))
-    temp = random.sample(train_list, int(len(train_list)*0.1))
+    temp = random.sample(train_list, int(len(train_list)))
 
     mini_batches = [temp[k:k + batch_size] for k in range(0, len(temp) - batch_size, batch_size)]
 
