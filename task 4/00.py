@@ -94,29 +94,13 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 #                  for k in range(0,data_loader.num_train_data-batch_size,batch_size)]
 # for batch_index in range(num_batches):
 train_list,val_list = data_loader.split_train_val(train_list,0.9)
+max_acc = 0
 for epoch in range(num_epochs):
+    sample_path = './sample_{}.txt'.format(epoch)
     temp = random.sample(val_list, int(len(val_list) * 0.01))
     test_names = [temp[k] for k in range(0, len(temp))]
     corr_num = 0
     test_total_loss = 0
-    for test_iter, mini_batch in enumerate(test_names):
-        X = data_loader.get_batch_test(mini_batch)  # 3 * 28 * 28* 3
-        anchor,pos,neg = X[:,0],X[:,1],X[:,2]
-        anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
-        positive_distance = np.mean(np.square(anchor_emb - positive_emb))
-        negative_distance = np.mean(np.square(anchor_emb - negative_emb))
-
-        loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
-        test_total_loss += loss
-        # print('loss value for {}: {}'.format(mini_batch,loss))
-        if positive_distance < negative_distance:
-            corr_num += 1
-    test_avg_loss = test_total_loss/len(test_names)
-    accuracy = corr_num/len(test_names)
-    print('accuracy ',accuracy,' test avg loss: ',test_avg_loss)
-
-
-    # temp = random.sample(train_list, len(train_list))
     temp = random.sample(train_list, int(len(train_list)))
 
     mini_batches = [temp[k:k + batch_size] for k in range(0, len(temp) - batch_size, batch_size)]
@@ -133,4 +117,37 @@ for epoch in range(num_epochs):
             print("epoch %d : batch %d: loss %f" % (epoch, iteration, loss.numpy()))
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(grads_and_vars=zip(grads, model.trainable_variables))
+
+    for test_iter, mini_batch in enumerate(test_names):
+        X = data_loader.get_batch_test(mini_batch)  # 3 * 28 * 28* 3
+        anchor,pos,neg = X[:,0],X[:,1],X[:,2]
+        anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
+        positive_distance = np.mean(np.square(anchor_emb - positive_emb))
+        negative_distance = np.mean(np.square(anchor_emb - negative_emb))
+
+        loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
+        test_total_loss += loss
+        # print('loss value for {}: {}'.format(mini_batch,loss))
+        if positive_distance < negative_distance:
+            corr_num += 1
+    test_avg_loss = test_total_loss/len(test_names)
+    accuracy = corr_num/len(test_names)
+    print('accuracy ',accuracy,' test avg loss: ',test_avg_loss)
+    if accuracy>max_acc:
+        f = open(sample_path,'w+')
+        for test_iter, mini_batch in enumerate(test_list):
+            X = data_loader.get_batch_test(mini_batch)  # 3 * 28 * 28* 3
+            anchor,pos,neg = X[:,0],X[:,1],X[:,2]
+            anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
+            positive_distance = np.mean(np.square(anchor_emb - positive_emb))
+            negative_distance = np.mean(np.square(anchor_emb - negative_emb))
+
+            loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
+            test_total_loss += loss
+            # print('loss value for {}: {}'.format(mini_batch,loss))
+            if positive_distance < negative_distance:
+                f.write('1\n')
+            else:
+                f.write('0\n')
+        f.close()
 

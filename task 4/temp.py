@@ -67,9 +67,9 @@ class DataSet():
 
     def split_train_val(self,train_list,train_ratio):
 
-        random.shuffle(data)
-        train = train_list[0:int(train_ratio*len(data))]
-        validation = train_list[int(train_ratio*len(data))];
+        random.shuffle(train_list)
+        train = train_list[0:int(train_ratio*len(train_list))]
+        validation = train_list[int(train_ratio*len(train_list)):];
 
         return train,validation
 
