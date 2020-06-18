@@ -128,6 +128,7 @@ def main():
         mini_batches = [temp_val[k:k+opt.batch_size] for k in range(0,len(temp_val)-opt.batch_size,opt.batch_size)]
 
         total_num = 0
+        corr_num = 0
         test_loss = 0
         for iteration,mini_batch in enumerate(mini_batches):
 
