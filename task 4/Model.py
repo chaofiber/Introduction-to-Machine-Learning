@@ -2,7 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 # import xplot
 
 
@@ -32,8 +32,8 @@ class Model:
 	def __init__(self, opt):
 
 		self.batch_size = opt.batch_size
-		self.height = 28
-		self.width = 28
+		self.height = 224
+		self.width = 224
 		self.channels = 3
 		self.outdim = 32
 		self.lr = opt.lr

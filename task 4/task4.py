@@ -1,6 +1,6 @@
 # import pandas as pd
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from PIL import Image
 import argparse
 from Model import Model
@@ -104,7 +104,7 @@ def main():
 
     model = Model(opt)
 
-    train_list_ = random.sample(train_list,int(len(train_list)*0.1))
+    # train_list_ = random.sample(train_list,int(len(train_list)*0.1))
 
     for epoch in range(opt.nb_epochs):
 
