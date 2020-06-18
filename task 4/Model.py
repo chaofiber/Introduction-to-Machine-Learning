@@ -38,7 +38,10 @@ def encoder_resnet(x,outdim):
 	base_model.trainable=False
 	last = base_model(x)
 	c = tf.layers.flatten(last)
-	out = tf.layers.dense(c,outdim,None)
+	c1 = tf.layers.dense(c,1024,None)
+	# c1 = tf.keras.layers.Dropout(c1,0.5)
+	c2 = tf.layers.dense(c1,512,None)
+	out = tf.layers.dense(c2,outdim,None)
 
 	return out
 
@@ -58,6 +61,7 @@ class Model:
 		self.path = '.'
 		self.graph = tf.Graph()
 		self.step = 0
+		self.network = opt.network
 
 		with self.graph.as_default():
 
@@ -113,10 +117,15 @@ class Model:
 		# anchor_embedding = encoder(Image_anchor,self.outdim)
 		# positive_embedding = encoder(Image_positove,self.outdim)
 		# negative_embedding = encoder(Image_negative,self.outdim)
+		if self.network=='ResNet50':
+			anchor_embedding = encoder_resnet(Image_anchor,self.outdim)
+			positive_embedding = encoder_resnet(Image_positove,self.outdim)
+			negative_embedding = encoder_resnet(Image_negative,self.outdim)
+		else:
+			anchor_embedding = encoder(Image_anchor,self.outdim)
+			positive_embedding = encoder(Image_positove,self.outdim)
+			negative_embedding = encoder(Image_negative,self.outdim)
 
-		anchor_embedding = encoder_resnet(Image_anchor,self.outdim)
-		positive_embedding = encoder_resnet(Image_positove,self.outdim)
-		negative_embedding = encoder_resnet(Image_negative,self.outdim)
 
 		normed_positive_embedding = tf.math.l2_normalize(positive_embedding)
 		normed_negative_embedding = tf.math.l2_normalize(negative_embedding)

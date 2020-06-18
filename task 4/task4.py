@@ -99,6 +99,7 @@ def main():
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--Ischeckpoint', default=False, type=boolean, help='If load the saved model')
     parser.add_argument('--nb_epochs', default=20, type=int, help='epochs')
+    parser.add_argument('--network', default='ResNet50',  help='name')
 
     opt = parser.parse_args()
 
