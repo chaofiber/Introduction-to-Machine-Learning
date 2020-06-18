@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import h5py
 import tensorflow.compat.v1 as tf
 tf.disable_eager_execution()
 from tensorflow.keras.applications.resnet50 import ResNet50
@@ -30,10 +31,16 @@ def encoder(x,outdim):
 		return out	
 
 
-# def encoder_resnet(x,outdim):
+def encoder_resnet(x,outdim):
 
-# 	with tf.variable_scope('resnet',reuse=tf.AUTO_REUSE):
-# 		base_model = ResNet50(input_shape=(224,224,3),include_top=False,weights='imagenet'
+	# with tf.variable_scope('resnet',reuse=tf.AUTO_REUSE):
+	base_model = ResNet50(input_shape=(224,224,3),include_top=False,weights='imagenet')
+	base_model.trainable=False
+	last = base_model(x)
+	c = tf.layers.flatten(last)
+	out = tf.layers.dense(c,outdim,None)
+
+	return out
 
 
 class Model:
@@ -44,7 +51,7 @@ class Model:
 		self.height = 224
 		self.width = 224
 		self.channels = 3
-		self.outdim = 32
+		self.outdim = 256
 		self.lr = opt.lr
 		self.beta1 = 0.9
 		self.Isloadcheckpoint = False
@@ -103,9 +110,13 @@ class Model:
 		# Image_positove = tf.reshape(self.Image[:,1:,:,:],[self.batch_size,self.height,self.width,self.channels])
 		# Image_negative = tf.reshape(self.Image[:,2,:,:,:],[self.batch_size,self.height,self.width,self.channels])
 
-		anchor_embedding = encoder(Image_anchor,self.outdim)
-		positive_embedding = encoder(Image_positove,self.outdim)
-		negative_embedding = encoder(Image_negative,self.outdim)
+		# anchor_embedding = encoder(Image_anchor,self.outdim)
+		# positive_embedding = encoder(Image_positove,self.outdim)
+		# negative_embedding = encoder(Image_negative,self.outdim)
+
+		anchor_embedding = encoder_resnet(Image_anchor,self.outdim)
+		positive_embedding = encoder_resnet(Image_positove,self.outdim)
+		negative_embedding = encoder_resnet(Image_negative,self.outdim)
 
 		self.positive_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-positive_embedding),axis=-1,keepdims=True))
 		self.negative_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-negative_embedding),axis=-1,keepdims=True))
