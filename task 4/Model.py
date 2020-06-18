@@ -6,7 +6,29 @@ import h5py
 import tensorflow.compat.v1 as tf
 tf.disable_eager_execution()
 from tensorflow.keras.applications.resnet50 import ResNet50
+from keras import backend as K
+
+
 # import xplot
+def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'): # ---这两个loss部分似乎不对，但我不知道这么改
+    # anchor, positive, negative = inputs
+    inputs = K.l2_normalize(inputs, axis=1)
+    dist = 'sqeuclidean'
+    anchor, positive, negative = inputs[0],inputs[1],inputs[2]
+    positive_distance = K.square(anchor - positive)
+    negative_distance = K.square(anchor - negative)
+    if dist == 'euclidean':
+        positive_distance = K.sqrt(K.sum(positive_distance, axis=-1, keepdims=True))
+        negative_distance = K.sqrt(K.sum(negative_distance, axis=-1, keepdims=True))
+    elif dist == 'sqeuclidean':
+        positive_distance = K.sum(positive_distance, axis=-1, keepdims=True)
+        negative_distance = K.sum(negative_distance, axis=-1, keepdims=True)
+    loss = positive_distance - negative_distance
+    if margin == 'maxplus':
+        loss = K.maximum(0.0, 10 + loss)
+    elif margin == 'softplus':
+        loss = K.log(10 + K.exp(loss))
+    return K.mean(loss)
 
 
 def encoder(x,outdim):
@@ -38,10 +60,10 @@ def encoder_resnet(x,outdim):
 	base_model.trainable=False
 	last = base_model(x)
 	c = tf.layers.flatten(last)
-	c1 = tf.layers.dense(c,1024,None)
+	# c1 = tf.layers.dense(c,1024,None)
 	# c1 = tf.keras.layers.Dropout(c1,0.5)
-	c2 = tf.layers.dense(c1,512,None)
-	out = tf.layers.dense(c2,outdim,None)
+	c = tf.layers.dense(c,512,None)
+	out = tf.layers.dense(c,outdim,None)
 
 	return out
 
@@ -54,7 +76,7 @@ class Model:
 		self.height = 224
 		self.width = 224
 		self.channels = 3
-		self.outdim = 32
+		self.outdim = 256
 		self.lr = opt.lr
 		self.beta1 = 0.9
 		self.Isloadcheckpoint = False
@@ -127,15 +149,17 @@ class Model:
 			negative_embedding = encoder(Image_negative,self.outdim)
 
 
-		normed_positive_embedding = tf.math.l2_normalize(positive_embedding)
-		normed_negative_embedding = tf.math.l2_normalize(negative_embedding)
-		normed_anchor_embedding = tf.math.l2_normalize(anchor_embedding)
+		# normed_positive_embedding = tf.math.l2_normalize(positive_embedding)
+		# normed_negative_embedding = tf.math.l2_normalize(negative_embedding)
+		# normed_anchor_embedding = tf.math.l2_normalize(anchor_embedding)
 
-		self.positive_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_positive_embedding),axis=-1,keepdims=True))
-		self.negative_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_negative_embedding),axis=-1,keepdims=True))
+		# self.positive_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_positive_embedding),axis=-1,keepdims=True))
+		# self.negative_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_negative_embedding),axis=-1,keepdims=True))
 
 
-		self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
+		# self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
+
+		self.loss = triplet_loss([anchor_embedding,positive_embedding,negative_embedding])
 
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.loss)
 
