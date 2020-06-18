@@ -1,17 +1,17 @@
-import pandas as pd
+# import pandas as pd
 import numpy as np
 import tensorflow as tf
 from PIL import Image
 import argparse
 from Model import Model
-from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge, Lasso, RidgeCV, SGDClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, KFold
-from sklearn.metrics import mean_squared_error, roc_auc_score, r2_score, f1_score
-from sklearn import preprocessing
+# from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge, Lasso, RidgeCV, SGDClassifier
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.model_selection import train_test_split, KFold
+# from sklearn.metrics import mean_squared_error, roc_auc_score, r2_score, f1_score
+# from sklearn import preprocessing
 import math
 import csv
-from xgboost import XGBRegressor
+# from xgboost import XGBRegressor
 import random
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
