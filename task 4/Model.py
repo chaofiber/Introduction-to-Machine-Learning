@@ -53,11 +53,11 @@ def encoder(x,outdim):
 		return out	
 
 
-def encoder_resnet(x,outdim):
+def encoder_resnet(x,outdim,finetune):
 
 	# with tf.variable_scope('resnet',reuse=tf.AUTO_REUSE):
 	base_model = ResNet50(input_shape=(224,224,3),include_top=False,weights='imagenet')
-	base_model.trainable=False
+	base_model.trainable=finetune
 	last = base_model(x)
 	c = tf.layers.flatten(last)
 	# c1 = tf.layers.dense(c,1024,None)
@@ -84,6 +84,7 @@ class Model:
 		self.graph = tf.Graph()
 		self.step = 0
 		self.network = opt.network
+		self.isfinetune = opt.Isfinetune
 
 		with self.graph.as_default():
 
@@ -140,9 +141,9 @@ class Model:
 		# positive_embedding = encoder(Image_positove,self.outdim)
 		# negative_embedding = encoder(Image_negative,self.outdim)
 		if self.network=='ResNet50':
-			anchor_embedding = encoder_resnet(Image_anchor,self.outdim)
-			positive_embedding = encoder_resnet(Image_positove,self.outdim)
-			negative_embedding = encoder_resnet(Image_negative,self.outdim)
+			anchor_embedding = encoder_resnet(Image_anchor,self.outdim,self.isfinetune)
+			positive_embedding = encoder_resnet(Image_positove,self.outdim,self.isfinetune)
+			negative_embedding = encoder_resnet(Image_negative,self.outdim,self.isfinetune)
 		else:
 			anchor_embedding = encoder(Image_anchor,self.outdim)
 			positive_embedding = encoder(Image_positove,self.outdim)

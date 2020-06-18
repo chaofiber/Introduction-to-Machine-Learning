@@ -100,6 +100,8 @@ def main():
     parser.add_argument('--Ischeckpoint', default=False, type=boolean, help='If load the saved model')
     parser.add_argument('--nb_epochs', default=20, type=int, help='epochs')
     parser.add_argument('--network', default='ResNet50',  help='name')
+    parser.add_argument('--Isfinetune', default=True, type=boolean ,  help='is finetune')
+
 
     opt = parser.parse_args()
 
@@ -110,20 +112,7 @@ def main():
 
     for epoch in range(opt.nb_epochs):
 
-
-        temp = random.sample(train_list_,int(len(train_list_)))
-        mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
-        
-        for iteration, mini_batch in enumerate(mini_batches):
-
-            Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
-            loss,positive_distance,negative_distance = model.update(Image)
-
-            if iteration % 50 == 0:
-                # print(positive_distance- negative_distance)
-                print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
-
-        # for validation use
+    # for validation use
 
         temp_val = random.sample(val_list_,len(val_list_))
         mini_batches = [temp_val[k:k+opt.batch_size] for k in range(0,len(temp_val)-opt.batch_size,opt.batch_size)]
@@ -147,7 +136,21 @@ def main():
                 if positive_distance[i]<negative_distance[i]:
                     corr_num += 1
         acc = corr_num / total_num
-        print('validation accuracy: ', acc, 'total_loss', test_loss)
+        print('validation accuracy: ', acc, 'total_loss', test_loss)        
+
+    # training
+
+        temp = random.sample(train_list_,int(len(train_list_)))
+        mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
+        
+        for iteration, mini_batch in enumerate(mini_batches):
+
+            Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
+            loss,positive_distance,negative_distance = model.update(Image)
+
+            if iteration % 50 == 0:
+                # print(positive_distance- negative_distance)
+                print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
 
 
 
