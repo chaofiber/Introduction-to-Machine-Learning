@@ -142,9 +142,9 @@ class Model:
 
 	def test(self,Image):
 
-		loss = self.sess.run([self.loss],
+		loss,positive_distance,negative_distance = self.sess.run([self.loss, self.positive_distance,self.negative_distance],
 			feed_dict = {
-			    self.Image : Image
+			    self.Image : Image,
 			})
 
-		return loss
+		return loss,positive_distance,negative_distance

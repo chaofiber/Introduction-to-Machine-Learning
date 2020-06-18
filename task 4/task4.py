@@ -125,15 +125,27 @@ def main():
         # for validation use
 
         temp_val = random.sample(val_list_,len(val_list_))
-        mini_batches = [temp_val[k:k+opt,batch_size] for k in range(0,len(temp_val)-opt.batch_size,opt.batch_size)]
+        mini_batches = [temp_val[k:k+opt.batch_size] for k in range(0,len(temp_val)-opt.batch_size,opt.batch_size)]
 
+        total_num = 0
+        test_loss = 0
         for iteration,mini_batch in enumerate(mini_batches):
 
             Image = data.get_batch(buffer,mini_batch)
-            loss = model.test(Image)
+            loss,positive_distance,negative_distance = model.test(Image)
+
+            test_loss += loss
 
             if iteration % 50 == 0:
                 print("epoch %d : batch %d: validation loss %f" % (epoch, iteration, np.mean(loss)))
+
+
+            for i in range(opt.batch_size):
+                total_num += 1
+                if positive_distance<negative_distance:
+                    corr_num += 1
+        acc = corr_num / total_num
+        print('validation accuracy: ', acc, 'total_loss', test_loss)
 
 
 
