@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 from alex import triplet_loss,alex_model
 from temp import DataSet
+from tensorflow.keras import regularizers
 import random
 import keras
 X = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -43,9 +44,9 @@ class CNN(tf.keras.Model):
         self.bn2 = tf.keras.layers.BatchNormalization(axis=1)
         self.pool2 = tf.keras.layers.MaxPool2D(pool_size=[2, 2], strides=2)
         self.flatten = tf.keras.layers.Reshape(target_shape=(7 * 7 * 64,))
-        self.dense1 = tf.keras.layers.Dense(units=1024, activation=tf.nn.relu)
+        self.dense1 = tf.keras.layers.Dense(units=1024, kernel_regularizer=regularizers.l2(0.0001),activation=tf.nn.relu)
         self.dp1 = tf.keras.layers.Dropout(rate= 0.5)
-        self.dense2 = tf.keras.layers.Dense(units=256)
+        self.dense2 = tf.keras.layers.Dense(units=256, kernel_regularizer=regularizers.l2(0.0001))
         self.dp2 = tf.keras.layers.Dropout(rate=0.5)
 
     def call(self, inputs):
@@ -99,6 +100,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 train_list,val_list = data_loader.split_train_val(train_list,0.8)
 max_acc = 0
 for epoch in range(num_epochs):
+    ckpt_path = "training_2/cp-epoch{:04d}.ckpt".format(epoch+1)
     sample_path = './sample_{}.txt'.format(epoch)
     temp = random.sample(val_list, int(len(val_list)))
     test_names = [temp[k] for k in range(0, len(temp))]
@@ -136,6 +138,7 @@ for epoch in range(num_epochs):
         # print('loss value for {}: {}'.format(mini_batch,loss))
         if positive_distance < negative_distance:
             corr_num += 1
+    model.save_weights(ckpt_path)
     test_avg_loss = test_total_loss/len(test_names)
     accuracy = corr_num/len(test_names)
     print('accuracy ',accuracy,' test avg loss: ',test_avg_loss)
