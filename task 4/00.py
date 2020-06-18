@@ -44,7 +44,9 @@ class CNN(tf.keras.Model):
         self.pool2 = tf.keras.layers.MaxPool2D(pool_size=[2, 2], strides=2)
         self.flatten = tf.keras.layers.Reshape(target_shape=(7 * 7 * 64,))
         self.dense1 = tf.keras.layers.Dense(units=1024, activation=tf.nn.relu)
+        self.dp1 = tf.keras.layers.Dropout(rate= 0.5)
         self.dense2 = tf.keras.layers.Dense(units=256)
+        self.dp2 = tf.keras.layers.Dropout(rate=0.5)
 
     def call(self, inputs):
         x = self.conv1(inputs)                  # [batch_size, 28, 28, 32]
@@ -55,6 +57,7 @@ class CNN(tf.keras.Model):
         x = self.pool2(x)                       # [batch_size, 7, 7, 64]
         x = self.flatten(x)                     # [batch_size, 7 * 7 * 64]
         x = self.dense1(x)                      # [batch_size, 1024]
+        x = self.dp1(x)
         output = self.dense2(x)                      # [batch_size, 10]
         # output = tf.nn.softmax(x)
         return output
@@ -85,8 +88,8 @@ data_loader = DataSet(train_list, test_list)
 
 # buffer = np.load('buffer.npy')
 
-# optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+# optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
 # num_batches = int(data_loader.num_train_data // batch_size * num_epochs)
 # print('number of batches: ',num_batches)
 # index = [i for i in range(data_loader.num_train_data)]
@@ -105,6 +108,7 @@ for epoch in range(num_epochs):
 
     mini_batches = [temp[k:k + batch_size] for k in range(0, len(temp) - batch_size, batch_size)]
 
+    # ---training
     for iteration, mini_batch in enumerate(mini_batches):
         X = data_loader.get_batch(mini_batch)  # batchsize *3 * 28 * 28* 3
         # X = data_loader.get_batch(batch)
@@ -113,15 +117,17 @@ for epoch in range(num_epochs):
             anchor,pos,neg = X[:,0],X[:,1],X[:,2]
             anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
             loss = triplet_loss([anchor_emb,positive_emb,negative_emb])
-        if iteration % 20 == 0:
+        if iteration % 200 == 0:
             print("epoch %d : batch %d: loss %f" % (epoch, iteration, loss.numpy()))
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(grads_and_vars=zip(grads, model.trainable_variables))
 
+    # --- testing
     for test_iter, mini_batch in enumerate(test_names):
         X = data_loader.get_batch_test(mini_batch)  # 3 * 28 * 28* 3
         anchor,pos,neg = X[:,0],X[:,1],X[:,2]
-        anchor_emb,positive_emb,negative_emb = model(anchor),model(pos),model(neg)
+        anchor_emb,positive_emb,negative_emb = model(anchor,training = False),\
+                                               model(pos,training = False),model(neg,training = False)
         positive_distance = np.mean(np.square(anchor_emb - positive_emb))
         negative_distance = np.mean(np.square(anchor_emb - negative_emb))
 

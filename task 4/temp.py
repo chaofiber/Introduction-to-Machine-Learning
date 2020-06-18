@@ -67,15 +67,11 @@ class DataSet():
 
     def split_train_val(self,train_list,train_ratio):
 
-<<<<<<< HEAD
+
         random.shuffle(train_list)
         train = train_list[0:int(train_ratio*len(train_list))]
         validation = train_list[int(train_ratio*len(train_list)):];
-=======
-        # random.shuffle(data)
-        # train = train_list[0:int(train_ratio*len(data))]
-        # validation = train_list[int(train_ratio*len(data))];
->>>>>>> 80addb40a59b97706563f1f35a2780240710d0b3
+
 
         train = []
         val = []
