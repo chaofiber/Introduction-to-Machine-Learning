@@ -118,9 +118,9 @@ class Model:
 		positive_embedding = encoder_resnet(Image_positove,self.outdim)
 		negative_embedding = encoder_resnet(Image_negative,self.outdim)
 
-		normed_positive_embedding = tf.l2_normalize(positive_embedding)
-		normed_negative_embedding = tf.l2_normalize(negative_embedding)
-		normed_anchor_embedding = tf.l2_normalize(anchor_embedding)
+		normed_positive_embedding = tf.math.l2_normalize(positive_embedding)
+		normed_negative_embedding = tf.math.l2_normalize(negative_embedding)
+		normed_anchor_embedding = tf.math.l2_normalize(anchor_embedding)
 
 		self.positive_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_positive_embedding),axis=-1,keepdims=True))
 		self.negative_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_negative_embedding),axis=-1,keepdims=True))
