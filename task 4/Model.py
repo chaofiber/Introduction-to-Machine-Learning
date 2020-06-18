@@ -51,7 +51,7 @@ class Model:
 		self.height = 224
 		self.width = 224
 		self.channels = 3
-		self.outdim = 256
+		self.outdim = 32
 		self.lr = opt.lr
 		self.beta1 = 0.9
 		self.Isloadcheckpoint = False
@@ -126,7 +126,7 @@ class Model:
 		self.negative_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_negative_embedding),axis=-1,keepdims=True))
 
 
-		self.loss = tf.reduce_mean(tf.maximum(0.0,10+self.positive_distance- self.negative_distance) )
+		self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
 
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.loss)
 
