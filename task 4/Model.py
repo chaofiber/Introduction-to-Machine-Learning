@@ -118,11 +118,15 @@ class Model:
 		positive_embedding = encoder_resnet(Image_positove,self.outdim)
 		negative_embedding = encoder_resnet(Image_negative,self.outdim)
 
-		self.positive_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-positive_embedding),axis=-1,keepdims=True))
-		self.negative_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-negative_embedding),axis=-1,keepdims=True))
+		normed_positive_embedding = tf.l2_normalize(positive_embedding)
+		normed_negative_embedding = tf.l2_normalize(negative_embedding)
+		normed_anchor_embedding = tf.l2_normalize(anchor_embedding)
+
+		self.positive_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_positive_embedding),axis=-1,keepdims=True))
+		self.negative_distance = (tf.reduce_sum(tf.square(normed_anchor_embedding-normed_negative_embedding),axis=-1,keepdims=True))
 
 
-		self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
+		self.loss = tf.reduce_mean(tf.maximum(0.0,10+self.positive_distance- self.negative_distance) )
 
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.loss)
 
