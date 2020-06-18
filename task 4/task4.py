@@ -105,8 +105,10 @@ def main():
     model = Model(opt)
 
     # train_list_ = random.sample(train_list,int(len(train_list)*0.1))
+    train_list_, val_list_ = data.split_train_val(train_list,0.8)
 
     for epoch in range(opt.nb_epochs):
+
 
         temp = random.sample(train_list_,len(train_list_))
         mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
@@ -114,10 +116,24 @@ def main():
         for iteration, mini_batch in enumerate(mini_batches):
 
             Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
-            loss = model.update(Image)
+            loss,positive_distance,negative_distance = model.update(Image)
 
-            if iteration % 10 == 0:
+            if iteration % 5 == 0:
+                # print(positive_distance- negative_distance)
                 print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
+
+        # for validation use
+
+        temp_val = random.sample(val_list_,len(val_list_))
+        mini_batches = [temp_val[k:k+opt,batch_size] for k in range(0,len(temp_val)-opt.batch_size,opt.batch_size)]
+
+        for iteration,mini_batch in enumerate(mini_batches):
+
+            Image = data.get_batch(buffer,mini_batch)
+            loss = model.test(Image)
+
+            if iteration % 5 == 0:
+                print("epoch %d : batch %d: validation loss %f" % (epoch, iteration, np.mean(loss)))
 
 
 

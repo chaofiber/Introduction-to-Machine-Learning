@@ -46,13 +46,29 @@ class DataSet():
 		np.save('test',test);
 		return train, test
 
-	def split_train_val(self,data,train_ratio):
+	def split_train_val(self,train_list,train_ratio):
 
-		random.shuffle(data)
-		train = data[0:int(train_ratio*len(data))]
-		validation = data[int(train_ratio*len(data))];
+		random.shuffle(train_list)
+		train = train_list[0:int(train_ratio*len(train_list))]
+		validation = train_list[int(train_ratio*len(train_list)):];
 
-		return train,validation
+		train = []
+		val = []
+
+		bound = int(5000 * train_ratio)
+
+		for item in train_list:
+			if int(item[0])> bound and (int(item[1])>bound) and (int(item[2])>bound):
+				val.append(item)
+
+			if int(item[0])<=bound and (int(item[1])<=bound) and (int(item[2])<=bound):
+				train.append(item)
+
+		print(len(train))
+		print(len(val))
+		print(len(train_list))
+
+		return train,val
 
 	def compress_data_to_numpy(self):
 		data = []
@@ -60,7 +76,8 @@ class DataSet():
 		for i in range(10000):
 			filename = "food/"+ str(i).zfill(5) + ".jpg"
 			image = Image.open(filename)
-			image = image.resize((224,224))
+			# image = image.resize((224,224))
+			image = image.resize((28,28))
 			image_array = np.asarray(image)
 			data.append(image_array)
 			count += 1
