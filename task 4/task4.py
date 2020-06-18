@@ -142,7 +142,7 @@ def main():
 
             for i in range(opt.batch_size):
                 total_num += 1
-                if positive_distance<negative_distance:
+                if positive_distance[i]<negative_distance[i]:
                     corr_num += 1
         acc = corr_num / total_num
         print('validation accuracy: ', acc, 'total_loss', test_loss)
