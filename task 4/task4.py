@@ -118,7 +118,7 @@ def main():
             Image = data.get_batch(buffer,mini_batch);  # batchsize *3 * 28 * 28* 3
             loss,positive_distance,negative_distance = model.update(Image)
 
-            if iteration % 5 == 0:
+            if iteration % 50 == 0:
                 # print(positive_distance- negative_distance)
                 print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
 
@@ -132,7 +132,7 @@ def main():
             Image = data.get_batch(buffer,mini_batch)
             loss = model.test(Image)
 
-            if iteration % 5 == 0:
+            if iteration % 50 == 0:
                 print("epoch %d : batch %d: validation loss %f" % (epoch, iteration, np.mean(loss)))
 
 
