@@ -110,7 +110,7 @@ def main():
     for epoch in range(opt.nb_epochs):
 
 
-        temp = random.sample(train_list_,len(train_list_)*0.2)
+        temp = random.sample(train_list_,int(len(train_list_)*0.2))
         mini_batches = [temp[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
         
         for iteration, mini_batch in enumerate(mini_batches):
