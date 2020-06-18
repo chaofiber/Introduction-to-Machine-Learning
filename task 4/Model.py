@@ -28,7 +28,7 @@ def triplet_loss(inputs, dist='sqeuclidean', margin='maxplus'): # ---这两个lo
         loss = K.maximum(0.0, 10 + loss)
     elif margin == 'softplus':
         loss = K.log(10 + K.exp(loss))
-    return K.mean(loss)
+    return K.mean(loss), positive_distance, negative_distance
 
 
 def encoder(x,outdim):
@@ -159,7 +159,7 @@ class Model:
 
 		# self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
 
-		self.loss = triplet_loss([anchor_embedding,positive_embedding,negative_embedding])
+		self.loss, self.positive_distance,self.negative_distance= triplet_loss([anchor_embedding,positive_embedding,negative_embedding])
 
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.loss)
 
