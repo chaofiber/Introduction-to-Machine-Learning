@@ -152,7 +152,7 @@ def main():
                 # print(positive_distance- negative_distance)
                 print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
 
-    mini_batches = [test_list[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
+    mini_batches = [test_list[k:k+opt.batch_size] for k in range(0,len(test_list)-opt.batch_size,opt.batch_size)]
     f = open("submission.txt",'w+')
     count = 0
     for iteration, mini_batch in enumerate(mini_batches):
