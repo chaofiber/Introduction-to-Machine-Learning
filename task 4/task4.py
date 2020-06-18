@@ -136,7 +136,7 @@ def main():
                 if positive_distance[i]<negative_distance[i]:
                     corr_num += 1
         acc = corr_num / total_num
-        print('validation accuracy: ', acc, 'total_loss', test_loss)        
+        print('validation accuracy: ', acc, 'total_loss:', test_loss, 'total_test_num:', total_num, 'corr_num:', corr_num)        
 
     # training
 
@@ -151,6 +151,24 @@ def main():
             if iteration % 50 == 0:
                 # print(positive_distance- negative_distance)
                 print("epoch %d : batch %d: loss %f" % (epoch, iteration, np.mean(loss)))
+
+    mini_batches = [test_list[k:k+opt.batch_size] for k in range(0,len(temp)-opt.batch_size,opt.batch_size)]
+    f = open("submission.txt",'w+')
+    count = 0
+    for iteration, mini_batch in enumerate(mini_batches):
+
+        Image = data.get_batch(buffer,mini_batch)
+        loss,positive_distance,negative_distance = model.test(Image)
+
+        for i in range(opt.batch_size):
+            count += 1
+            if count % 1000 == 0:
+                print("testing sample: ", count)
+            if positive_distance[i] < negative_distance [i]:
+                f.write('1\n')
+            else:
+                f.write('0\n')
+    f.close()
 
 
 

@@ -79,7 +79,7 @@ class Model:
 		self.outdim = 256
 		self.lr = opt.lr
 		self.beta1 = 0.9
-		self.Isloadcheckpoint = False
+		self.Isloadcheckpoint = opt.Isloadcheckpoint
 		self.path = '.'
 		self.graph = tf.Graph()
 		self.step = 0
