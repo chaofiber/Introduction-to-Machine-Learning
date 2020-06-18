@@ -3,7 +3,8 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow.compat.v1 as tf
-# from tensorflow.keras.applications.resnet50 import ResNet50
+tf.disable_eager_execution()
+from tensorflow.keras.applications.resnet50 import ResNet50
 # import xplot
 
 
@@ -32,6 +33,7 @@ def encoder(x,outdim):
 # def encoder_resnet(x,outdim):
 
 # 	with tf.variable_scope('resnet',reuse=tf.AUTO_REUSE):
+# 		base_model = ResNet50(input_shape=(224,224,3),include_top=False,weights='imagenet'
 
 
 class Model:
