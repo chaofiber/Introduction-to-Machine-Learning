@@ -171,7 +171,7 @@ class Model:
 
 	def update(self,Image):
 
-		loss,positive_distance,negative_distance = self.sess.run([self.loss, self.positive_distance,self.negative_distance],
+		_,loss,positive_distance,negative_distance = self.sess.run([self.train_op,self.loss, self.positive_distance,self.negative_distance],
 			feed_dict = {
 			    self.Image : Image,
 			})
