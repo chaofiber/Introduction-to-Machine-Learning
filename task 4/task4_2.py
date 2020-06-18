@@ -14,6 +14,16 @@ import math
 import csv
 from xgboost import XGBRegressor
 from xgboost import XGBClassifier
+
+np.random.seed(1234)
+
+import tensorflow as tf
+tf.random.set_seed(1234)
+
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
 import random
 import os
 from sklearn.decomposition import PCA
@@ -49,15 +59,16 @@ def cross_validation(train_list, val_list, test_list, feature_data):
 	x_train = feature_selection(x_train,y_train,400)
 	x_val, y_val = get_data(val_list,feature_data)
 	x_val = feature_selection(x_val,y_train,400)
-	reg = xgb(x_train,y_train)
+	#reg = xgb(x_train,y_train)
+	reg = K_MLP(x_train,y_train)
 
 	y_train_pred = reg.predict(x_train)
-	predictions = [round(value) for value in y_train_pred]
+	predictions = [np.round(value) for value in y_train_pred]
 	accuracy = accuracy_score(y_train, predictions)
 	print("training accuracy", accuracy)
 
 	y_val_pred = reg.predict(x_val)
-	predictions = [round(value) for value in y_val_pred]
+	predictions = [np.round(value) for value in y_val_pred]
 
 	accuracy = accuracy_score(y_val, predictions)
 	print("validation accuracy", accuracy)
@@ -81,6 +92,19 @@ def xgb(X,y):
 	# xg_reg = XGBClassifier()
 	xg_reg.fit(X,y);
 	return xg_reg;
+
+def K_MLP(X,y):
+
+    model = Sequential()
+    model.add(Dense(1024,input_dim = 400, activation = 'relu'))
+    #model.add(Dense(8192,input_dim = 3000, activation = 'relu'))
+    model.add(Dense(1024, activation='relu'))
+    #model.add(Dense(1024, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',
+              optimizer='Adagrad')
+    model.fit(X,y,epochs=20,batch_size=128);
+    return model;
 
 
 def feature_selection(data,y,num_feature):
@@ -176,8 +200,7 @@ def main():
     print(data.shape)
 
     cross_validation(train_list_with_label,val_list_with_label,test_list,data)
-
-
-
-
+    
 main()
+
+
