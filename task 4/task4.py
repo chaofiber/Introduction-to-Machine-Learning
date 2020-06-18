@@ -61,7 +61,7 @@ def do_task(train, label_data, test):
 def main():
     train_path = './train_triplets.txt';
     test_path = './test_triplets.txt';
-    data_saved = False
+    data_saved = True
     train_list = []
     test_list = []
     with open(train_path) as f:
