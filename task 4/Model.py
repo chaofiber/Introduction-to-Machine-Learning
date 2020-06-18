@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow.compat.v1 as tf
+# from tensorflow.keras.applications.resnet50 import ResNet50
 # import xplot
 
 
@@ -26,6 +27,12 @@ def encoder(x,outdim):
 			out = tf.layers.dense(c5, outdim, None)
 
 		return out	
+
+
+# def encoder_resnet(x,outdim):
+
+# 	with tf.variable_scope('resnet',reuse=tf.AUTO_REUSE):
+
 
 class Model:
 
@@ -81,8 +88,10 @@ class Model:
 
 
 	def create_network(self):
-		self.Image =  tf.placeholder(tf.float32, shape=[self.batch_size,3,self.height, self.width, self.channels])
+		self.Image =  tf.placeholder(tf.uint8, shape=[self.batch_size,3,self.height, self.width, self.channels])
 		print(self.Image)
+
+		self.Image = tf.cast(self.Image, tf.float32)/255.0
 
 		Image_anchor = self.Image[:,0,:,:,:]
 		Image_positove = self.Image[:,1,:,:,:]
@@ -96,8 +105,11 @@ class Model:
 		positive_embedding = encoder(Image_positove,self.outdim)
 		negative_embedding = encoder(Image_negative,self.outdim)
 
+		self.positive_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-positive_embedding),axis=-1,keepdims=True))
+		self.negative_distance = tf.sqrt(tf.reduce_sum(tf.square(anchor_embedding-negative_embedding),axis=-1,keepdims=True))
 
-		self.loss = tf.reduce_mean( tf.reduce_sum(tf.square(anchor_embedding-positive_embedding)-tf.square(anchor_embedding - negative_embedding),axis=1))
+
+		self.loss = tf.reduce_mean(tf.maximum(0.0,1+self.positive_distance- self.negative_distance) )
 
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.loss)
 
@@ -108,9 +120,9 @@ class Model:
 
 	def update(self,Image):
 
-		loss = self.sess.run([self.loss],
+		loss,positive_distance,negative_distance = self.sess.run([self.loss, self.positive_distance,self.negative_distance],
 			feed_dict = {
-			    self.Image : Image
+			    self.Image : Image,
 			})
 
 		self.step += 1
@@ -126,6 +138,7 @@ class Model:
 			self.train_writer.flush()
 
 		# xplot.tick()
+		return loss,positive_distance,negative_distance
 
 	def test(self,Image):
 
