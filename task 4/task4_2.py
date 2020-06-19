@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+np.random.seed(1234)
 # import tensorflow as tf
+# tf.random.set_seed(1234)
 from PIL import Image
 import argparse
 # from Model import Model
@@ -22,9 +24,7 @@ from keras.layers import Dense
 from keras import optimizers
 from sklearn.decomposition import PCA
 
-np.random.seed(1234)
-# import tensorflow as tf
-# tf.random.set_seed(1234)
+
 
 
 # def cross_validation(data, Y_train, test):
@@ -125,7 +125,7 @@ def reverse_training_list(data_list):
 
 	# also augment it
 
-	random.shuffle(data_list)
+	np.random.shuffle(data_list)
 	length = len(data_list)
 	reversed_data_list = []
 	for i in range(length):
@@ -146,7 +146,7 @@ def reverse_training_list(data_list):
 			sample.append(label)
 			reversed_data_list.append(sample)
 
-	random.shuffle(reversed_data_list)
+	np.random.shuffle(reversed_data_list)
 	print("augmented size:", len(reversed_data_list))
 
 	return reversed_data_list
