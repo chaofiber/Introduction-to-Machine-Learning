@@ -24,7 +24,6 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras import optimizers
 
-import random
 import os
 from sklearn.decomposition import PCA
 
@@ -56,10 +55,10 @@ def cross_validation(train_list, val_list, test_list, feature_data):
 
 	# we use 10 fold // can do later, choose (0,500),(500,1000),...
 	x_train, y_train = get_data(train_list,feature_data)
-	x_train = feature_selection(x_train,y_train,400)
+	# x_train = feature_selection(x_train,y_train,100)
 	x_val, y_val = get_data(val_list,feature_data)
-	x_val = feature_selection(x_val,y_train,400)
-	#reg = xgb(x_train,y_train)
+	# x_val = feature_selection(x_val,y_train,100)
+	# reg = xgb(x_train,y_train)
 	reg = K_MLP(x_train,y_train)
 
 	y_train_pred = reg.predict(x_train)
@@ -73,9 +72,38 @@ def cross_validation(train_list, val_list, test_list, feature_data):
 	accuracy = accuracy_score(y_val, predictions)
 	print("validation accuracy", accuracy)
 
+	test_data = get_test_data(test_list,feature_data)
+	y_test = reg.predict(test_data)
+	predictions = [np.round(value) for value in y_test]
+
+	with open("file.txt", "w") as output:
+		for row in predictions:
+			output.write(str(int(row[0]))+'\n')
+
+
 	return
 
+def K_MLP(X,y):
 
+    model = Sequential()
+    model.add(Dense(2048,input_dim = 4096*3, activation = 'relu'))
+    #model.add(Dense(8192,input_dim = 3000, activation = 'relu'))
+    model.add(Dense(1024, activation='relu'))
+    # model.add(Dense(512, activation='relu'))
+    #model.add(Dense(1024, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary()
+    model.compile(loss='binary_crossentropy',
+              optimizer='Adagrad',metrics=['accuracy'])
+    model.fit(X,y,epochs=20,batch_size=512);
+    return model;
+
+def get_test_data(test_list,feature_data):
+	x = []
+	for item in test_list:
+		sample = np.concatenate((feature_data[int(item[0])],feature_data[int(item[1])],feature_data[int(item[2])]))
+		x.append(sample)
+	return np.array(x)
 
 def get_data(train_list, feature_data):
 	x = []
@@ -92,19 +120,6 @@ def xgb(X,y):
 	# xg_reg = XGBClassifier()
 	xg_reg.fit(X,y);
 	return xg_reg;
-
-def K_MLP(X,y):
-
-    model = Sequential()
-    model.add(Dense(1024,input_dim = 400, activation = 'relu'))
-    #model.add(Dense(8192,input_dim = 3000, activation = 'relu'))
-    model.add(Dense(1024, activation='relu'))
-    #model.add(Dense(1024, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    model.compile(loss='binary_crossentropy',
-              optimizer='Adagrad')
-    model.fit(X,y,epochs=20,batch_size=128);
-    return model;
 
 
 def feature_selection(data,y,num_feature):
@@ -123,27 +138,27 @@ def feature_selection(data,y,num_feature):
 
 def reverse_training_list(data_list):
 
-	random.shuffle(data_list)
+	np.random.shuffle(data_list)
 	length = len(data_list)
 	reversed_data_list = []
 	for i in range(length):
 		sample = []
-		if i<int(length/2.0):
-			sample.append(data_list[i][0])
-			sample.append(data_list[i][2])
-			sample.append(data_list[i][1])
-			label = 0
-			sample.append(label)
-			reversed_data_list.append(sample)
-		else:
-			sample.append(data_list[i][0])
-			sample.append(data_list[i][1])
-			sample.append(data_list[i][2])
-			label = 1
-			sample.append(label)
-			reversed_data_list.append(sample)
+		sample.append(data_list[i][0])
+		sample.append(data_list[i][2])
+		sample.append(data_list[i][1])
+		label = 0
+		sample.append(label)
+		reversed_data_list.append(sample)
+		sample = []
+		sample.append(data_list[i][0])
+		sample.append(data_list[i][1])
+		sample.append(data_list[i][2])
+		label = 1
+		sample.append(label)
+		reversed_data_list.append(sample)
 
-	random.shuffle(reversed_data_list)
+	np.random.shuffle(reversed_data_list)
+	print("double size:", len(reversed_data_list))
 
 	return reversed_data_list
 
@@ -188,7 +203,9 @@ def main():
             test_list.append(inner_list)
 
 
-    data = np.load('resnet_18_feat.npy')
+    # data = np.load('resnet_18_feat.npy')
+    data = np.load('VGGfeature.npy')
+    #data = np.load('InceptionResNetV2feature.npy')
 
     train_list,val_list= split_train_val(train_list,0.8)
 
@@ -200,7 +217,8 @@ def main():
     print(data.shape)
 
     cross_validation(train_list_with_label,val_list_with_label,test_list,data)
-    
+
+
+
+
 main()
-
-
