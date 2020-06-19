@@ -14,18 +14,18 @@ import math
 import csv
 from xgboost import XGBRegressor
 from xgboost import XGBClassifier
-
-np.random.seed(1234)
-
-import tensorflow as tf
-tf.random.set_seed(1234)
+import random
+import os
 
 from keras.models import Sequential
 from keras.layers import Dense
 from keras import optimizers
-
-import os
 from sklearn.decomposition import PCA
+
+np.random.seed(1234)
+# import tensorflow as tf
+# tf.random.set_seed(1234)
+
 
 # def cross_validation(data, Y_train, test):
 #     score = 0
@@ -72,38 +72,23 @@ def cross_validation(train_list, val_list, test_list, feature_data):
 	accuracy = accuracy_score(y_val, predictions)
 	print("validation accuracy", accuracy)
 
-	test_data = get_test_data(test_list,feature_data)
-	y_test = reg.predict(test_data)
-	predictions = [np.round(value) for value in y_test]
-
-	with open("file.txt", "w") as output:
-		for row in predictions:
-			output.write(str(int(row[0]))+'\n')
-
-
 	return
 
 def K_MLP(X,y):
 
     model = Sequential()
-    model.add(Dense(2048,input_dim = 4096*3, activation = 'relu'))
+    model.add(Dense(2048,input_dim = 1536*3, activation = 'relu'))
     #model.add(Dense(8192,input_dim = 3000, activation = 'relu'))
     model.add(Dense(1024, activation='relu'))
-    # model.add(Dense(512, activation='relu'))
+    model.add(Dense(512, activation='relu'))
     #model.add(Dense(1024, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     model.summary()
     model.compile(loss='binary_crossentropy',
-              optimizer='Adagrad',metrics=['accuracy'])
-    model.fit(X,y,epochs=20,batch_size=512);
+              optimizer='adam',metrics=['accuracy'])
+    model.fit(X,y,epochs=30,batch_size=256);
     return model;
 
-def get_test_data(test_list,feature_data):
-	x = []
-	for item in test_list:
-		sample = np.concatenate((feature_data[int(item[0])],feature_data[int(item[1])],feature_data[int(item[2])]))
-		x.append(sample)
-	return np.array(x)
 
 def get_data(train_list, feature_data):
 	x = []
@@ -115,9 +100,9 @@ def get_data(train_list, feature_data):
 	return np.array(x), np.array(y)
 
 def xgb(X,y):
-	xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.3,
-	max_depth = 5, alpha = 10, n_estimators = 100);
-	# xg_reg = XGBClassifier()
+	# xg_reg = XGBRegressor(objective ='binary:logistic', colsample_bytree = 0.3, learning_rate = 0.3,
+	# max_depth = 5, alpha = 10, n_estimators = 100);
+	xg_reg = XGBClassifier()
 	xg_reg.fit(X,y);
 	return xg_reg;
 
@@ -138,27 +123,31 @@ def feature_selection(data,y,num_feature):
 
 def reverse_training_list(data_list):
 
-	np.random.shuffle(data_list)
+	# also augment it
+
+	random.shuffle(data_list)
 	length = len(data_list)
 	reversed_data_list = []
 	for i in range(length):
-		sample = []
-		sample.append(data_list[i][0])
-		sample.append(data_list[i][2])
-		sample.append(data_list[i][1])
-		label = 0
-		sample.append(label)
-		reversed_data_list.append(sample)
-		sample = []
-		sample.append(data_list[i][0])
-		sample.append(data_list[i][1])
-		sample.append(data_list[i][2])
-		label = 1
-		sample.append(label)
-		reversed_data_list.append(sample)
+		for j in range(6):
+			# for each original index in the list, the features include (6*index,6*index+6))
+			sample = []
+			sample.append(6*int(data_list[i][0])+j)
+			sample.append(6*int(data_list[i][2])+j)
+			sample.append(6*int(data_list[i][1])+j)
+			label = 0
+			sample.append(label)
+			reversed_data_list.append(sample)
+			sample = []
+			sample.append(6*int(data_list[i][0])+j)
+			sample.append(6*int(data_list[i][1])+j)
+			sample.append(6*int(data_list[i][2])+j)
+			label = 1
+			sample.append(label)
+			reversed_data_list.append(sample)
 
-	np.random.shuffle(reversed_data_list)
-	print("double size:", len(reversed_data_list))
+	random.shuffle(reversed_data_list)
+	print("augmented size:", len(reversed_data_list))
 
 	return reversed_data_list
 
@@ -204,8 +193,10 @@ def main():
 
 
     # data = np.load('resnet_18_feat.npy')
-    data = np.load('VGGfeature.npy')
-    #data = np.load('InceptionResNetV2feature.npy')
+    # data = np.load('VGGfeature.npy')
+    # data = np.load('InceptionResNetV2feature.npy')
+
+    data = np.load('InceptionResNetV2feature_augmented.npy')
 
     train_list,val_list= split_train_val(train_list,0.8)
 
@@ -215,8 +206,9 @@ def main():
 
 
     print(data.shape)
+    # n = 30000
 
-    cross_validation(train_list_with_label,val_list_with_label,test_list,data)
+    # cross_validation(train_list_with_label,val_list_with_label,test_list,data)
 
 
 
