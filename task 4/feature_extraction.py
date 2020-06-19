@@ -19,6 +19,7 @@ import os
  # import InceptionResNetV2, preprocess_input
 from keras.applications.vgg16 import VGG16
 from keras.applications.vgg16 import preprocess_input
+from tensorflow.python.keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input
 from keras.models import Model
 
 # train_path = './train_triplets.txt';
@@ -41,20 +42,30 @@ from keras.models import Model
 buffer = np.load('buffer_224.npy')
 
 # model = VGG16(weights='imagenet', include_top=False)
-model = VGG16()
-model.layers.pop()
-model = Model(inputs=model.inputs, outputs=model.layers[-1].output)
-all_feature = []
+# model = VGG16()
 
-for i in range(10000):
+model = InceptionResNetV2(include_top=False,
+                        weights='imagenet',
+                        input_tensor=None,
+                        pooling='avg',
+                        input_shape=(299,299,3))
+
+# model.layers.pop()
+# model = Model(inputs=model.inputs, outputs=model.layers[-1].output)
+all_feature = []
+n = 10000
+for i in range(n):
 	print("preprocessing sample: ", i)
-	image = buffer[i]
+	filename = "food/"+ str(i).zfill(5) + ".jpg"
+	image = Image.open(filename)
+	image = image.resize((299,299))
 	image = np.expand_dims(image, axis=0)
 	img_data = preprocess_input(image)
-	vgg16_feature = model.predict(img_data)
-	# print(vgg16_feature.shape)
-	all_feature.append(vgg16_feature)
+	Incept_feature = model.predict(img_data)
+	# print(Incept_feature.shape)
+	all_feature.append(Incept_feature)
 np_feature = np.array(all_feature)
-np_feature = np_feature.reshape((10000,4096))
+np_feature = np_feature.reshape((n,1536))
 print(np_feature.shape)
-np.save('VGGfeature',data)
+np.save('InceptionResNetV2feature',np_feature)
+# np.save('VGGfeaure',np_feature)
