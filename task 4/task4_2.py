@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 np.random.seed(1234)
-# import tensorflow as tf
-# tf.random.set_seed(1234)
+import tensorflow as tf
+tf.random.set_seed(1234)
 from PIL import Image
 import argparse
 # from Model import Model
