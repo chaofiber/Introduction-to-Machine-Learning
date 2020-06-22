@@ -80,9 +80,9 @@ def cross_validation_voting(train_list, val_list, test_list, feature_data):
 	# we use 10 fold // can do later, choose (0,500),(500,1000),...
 	x_train, y_train = get_data(train_list,feature_data)
 	x_val, y_val = get_data(val_list,feature_data)
-	reg_10 = K_MLP(x_train,y_train,10)
-	reg_20 = K_MLP(x_train,y_train,20)
-	reg_30 = K_MLP(x_train,y_train,30)
+	reg_10 = K_MLP(x_train,y_train,15)
+	reg_20 = K_MLP(x_train,y_train,25)
+	reg_30 = K_MLP(x_train,y_train,35)
 
 	# eclf = VotingClassifier(estimators=[('10',clf1),('20',clf2),('30',clf3)],
  #                        voting='soft',weights=[1,1,1])
@@ -151,8 +151,8 @@ def K_MLP(X,y,num_epoch):
 	model.add(Dense(1024, activation='relu'))
 	model.add(Dense(1, activation='sigmoid'))
 	model.summary()
-	opt = keras.optimizers.Adam(learning_rate=0.001)
-	#opt = keras.optimizers.Adadelta()
+	#opt = keras.optimizers.Adam(learning_rate=0.001)
+	opt = keras.optimizers.Adadelta()
 	#opt = keras.optimizers.Nadam()
 	model.compile(loss='binary_crossentropy',optimizer=opt,metrics=['accuracy'])
 	model.fit(X,y,epochs=num_epoch,batch_size=1024)
@@ -285,5 +285,4 @@ def main():
 
 
 main()
-
 
